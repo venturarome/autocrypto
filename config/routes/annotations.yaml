@@ -1,0 +1,19 @@
+#controllers:
+#    resource: ../../src/Controller/
+#    type: annotation
+#controllers:
+#    resource: ../../src/Infrastructure/Web/Controller/
+#    type: annotation
+
+web:
+    resource: ../../src/Presentation/Web/Controller/
+    type: annotation
+
+api:
+    resource: ../../src/Presentation/Api/Controller/
+    type: annotation
+    prefix: /api
+
+kernel:
+    resource: ../../src/Kernel.php
+    type: annotation

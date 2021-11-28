@@ -1,0 +1,11 @@
+#index:
+#    path: /
+#    controller: App\Controller\DefaultController::index
+
+#cryptocurrency:
+#    path: /cryptocurrency
+#    controller: App\Presentation\Web\Controller\CryptocurrencyController::index
+
+#test:
+#    path: /test
+#    controller: App\Presentation\Web\Controller\CryptocurrencyController::test

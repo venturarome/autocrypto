@@ -1,0 +1,36 @@
+<!-- https://www.doctrine-project.org/projects/doctrine-orm/en/2.10/reference/xml-mapping.html -->
+<doctrine-mapping xmlns="https://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="https://doctrine-project.org/schemas/orm/doctrine-mapping
+                          https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Domain\Model\Account\Account"
+            table="account"
+            repository-class="App\Infrastructure\Persistence\Doctrine\Account\AccountRepository">
+
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO" />
+        </id>
+        <!-- unique and nullable defaults to false -->
+        <!-- 'unique=true' creates an 'unique index' -->
+        <field name="uuid" column="uuid" type="string" length="36" unique="true" />
+        <field name="reference" column="reference" type="string" length="8" unique="true" />
+        <field name="status" column="status" type="string" length="16" />
+        <field name="api_key" column="api_key" type="string" length="64" />
+        <field name="secret_key" column="secret_key" type="string" length="128" />
+        <embedded name="date_tracker" class="App\Domain\Model\Shared\DateTracker\DateTracker" use-column-prefix="false" />
+
+        <!-- https://www.doctrine-project.org/projects/doctrine-orm/en/2.10/reference/xml-mapping.html -->
+        <!-- The many-to-one association is ALWAYS the owning side of any bidirectional association. Use 'inversed-by' (optional) to appear in the inverse side. -->
+        <!-- The one-to-many association is ALWAYS the inverse side of any association. Use 'mapped-by' (required) to reference the field on the owning side. -->
+        <one-to-many field="balances" target-entity="App\Domain\Model\Asset\Balance" mapped-by="account">
+            <join-column name="account_id" referenced-column-name="id" />
+            <cascade>
+                <!-- When we want this to be persisted when the current class is persisted -->
+                <cascade-persist />
+            </cascade>
+        </one-to-many>
+
+    </entity>
+
+</doctrine-mapping>

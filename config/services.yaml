@@ -1,0 +1,70 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+    example: "ThisIsAnExampleOfAParameter"
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        # public: true
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:   # <- this is a namespace prefix
+        resource: '../src/*'
+        exclude:    # These folders won't have autowiring, and we will need to add the wiring manually
+            - '../src/Application/'
+            - '../src/Domain/'
+            - '../src/Infrastructure/'
+            - '../src/Presentation/'
+            - '../src/Kernel.php'
+
+    # I want controllers to be automatically available, so services can be injected using autowiring
+    App\Presentation\Web\Controller\:
+        resource: '../src/Presentation/Web/Controller'
+        tags: ['controller.service_arguments']
+
+    App\Presentation\Api\Controller\:
+        resource: '../src/Presentation/Api/Controller'
+        tags: [ 'controller.service_arguments' ]
+
+    # This will register all my commands, hence, available for use
+    App\Infrastructure\Command\:
+        resource: '../src/Infrastructure/Command'
+        tags: ['console.command']
+
+    # Make Application Services available automatically
+    App\Application\Service\:
+        resource: '../src/Application/Service'
+
+    # Make Repositories available automatically
+    App\Domain\Repository\:
+        resource: '../src/Domain/Repository'
+
+    App\Infrastructure\Persistence\Doctrine\Repository\:
+        resource: '../src/Infrastructure/Persistence/Doctrine/Repository'
+
+    # Make Factories available automatically
+    App\Domain\Factory\:
+        resource: '../src/Domain/Factory'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    # https://symfony.com/doc/current/components/dependency_injection.html
+
+
+    #############
+    # Providers #
+    #############
+    App\Infrastructure\Provider\Kraken\KrakenApiClient:
+
+    App\Infrastructure\Provider\CoinGecko\CoinGeckoApiClient:
+
+    App\Infrastructure\Provider\Kaiko\KaikoApiClient:
+

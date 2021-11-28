@@ -1,0 +1,28 @@
+<!-- https://www.doctrine-project.org/projects/doctrine-orm/en/2.10/reference/xml-mapping.html -->
+<doctrine-mapping xmlns="https://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="https://doctrine-project.org/schemas/orm/doctrine-mapping
+                          https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Domain\Model\Event\Event"
+            table="event"
+            repository-class="App\Infrastructure\Persistence\Doctrine\Event\EventRepository">
+
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO" />
+        </id>
+        <field name="uuid" column="uuid" type="string" length="36" unique="true" />
+        <field name="name" column="name" type="string" length="64" />
+        <field name="entity_uuid" column="entity_uuid" type="string" length="36" />
+        <field name="content" column="content" type="json" />
+        <field name="thrown_at" column="thrown_at" type="datetime" />
+        <field name="handler_status" column="handler_status" type="string" length="16" nullable="true" />
+        <field name="processed_at" column="processed_at" type="datetime" nullable="true" />
+
+        <indexes>
+            <index name="idx_entity_uuid" columns="entity_uuid" />
+        </indexes>
+
+    </entity>
+
+</doctrine-mapping>

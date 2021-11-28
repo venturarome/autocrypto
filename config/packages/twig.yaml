@@ -1,0 +1,8 @@
+twig:
+    paths:
+        '%kernel.project_dir%/src/Presentation/Web/Template': Web
+        '%kernel.project_dir%/src/Presentation/Api/Template': Api
+
+when@test:
+    twig:
+        strict_variables: true

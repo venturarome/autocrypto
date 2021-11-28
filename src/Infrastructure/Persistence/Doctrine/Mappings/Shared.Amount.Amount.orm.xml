@@ -1,0 +1,12 @@
+<!-- https://www.doctrine-project.org/projects/doctrine-orm/en/2.10/tutorials/embeddables.html -->
+<doctrine-mapping xmlns="https://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="https://doctrine-project.org/schemas/orm/doctrine-mapping
+                          https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <embeddable name="App\Domain\Model\Shared\Amount\Amount">
+        <field name="value" column="value" type="integer" />
+        <field name="decimals" column="decimals" type="integer" />
+    </embeddable>
+
+</doctrine-mapping>
