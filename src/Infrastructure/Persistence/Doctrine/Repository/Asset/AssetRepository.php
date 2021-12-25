@@ -5,16 +5,15 @@ namespace App\Infrastructure\Persistence\Doctrine\Repository\Asset;
 use App\Application\Exception\NotFoundException;
 use App\Domain\Model\Asset\Asset;
 use App\Domain\Repository\Asset\AssetRepository as AssetRepositoryI;
-use App\Infrastructure\Persistence\Doctrine\Repository\RepositoryBase;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 
-class AssetRepository extends ServiceEntityRepository /*RepositoryBase*/ implements AssetRepositoryI
+class AssetRepository extends ServiceEntityRepository implements AssetRepositoryI
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, string $entity_class = Asset::class)
     {
-        parent::__construct($registry, Asset::class);
+        parent::__construct($registry, $entity_class);
     }
 
     public function findBySymbol(string $symbol): ?Asset

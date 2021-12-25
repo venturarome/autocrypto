@@ -3,15 +3,15 @@
 namespace App\Infrastructure\Persistence\Doctrine\Repository\Asset;
 
 use App\Application\Exception\NotFoundException;
-use App\Domain\Model\Asset\Asset;
 use App\Domain\Model\Asset\Pair;
+use App\Domain\Model\Asset\PairCollection;
+use App\Domain\Model\Asset\SpotAsset;
 use App\Domain\Repository\Asset\PairRepository as PairRepositoryI;
-use App\Infrastructure\Persistence\Doctrine\Repository\RepositoryBase;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 
-class PairRepository extends ServiceEntityRepository /*RepositoryBase*/ implements PairRepositoryI
+class PairRepository extends ServiceEntityRepository implements PairRepositoryI
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -32,17 +32,22 @@ class PairRepository extends ServiceEntityRepository /*RepositoryBase*/ implemen
         return $pair;
     }
 
-    public function findByAssets(Asset $base, Asset $quote): ?Pair
+    public function findByAssets(SpotAsset $base, SpotAsset $quote): ?Pair
     {
-        return $this->findOneBy(['base_asset' => $base, 'quote_asset']);
+        return $this->findOneBy(['base' => $base, 'quote' => $quote]);
     }
 
-    public function findByAssetsOrFail(Asset $base, Asset $quote): Pair
+    public function findByAssetsOrFail(SpotAsset $base, SpotAsset $quote): Pair
     {
         $pair = $this->findByAssets($base, $quote);
         if (!$pair) {
             throw new NotFoundException("Pair of assets '{$base->getSymbol()}/{$quote->getSymbol()}' not found!");
         }
         return $pair;
+    }
+
+    public function findByQuote(SpotAsset $quote): PairCollection
+    {
+        return new PairCollection($this->findBy(['quote' => $quote]));
     }
 }

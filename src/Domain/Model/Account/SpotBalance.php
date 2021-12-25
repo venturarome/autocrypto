@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Domain\Model\Account;
+
+use App\Domain\Model\Asset\Asset;
+use App\Domain\Model\Asset\SpotAsset;
+use App\Domain\Model\Trading\SpotTransactionCollection;
+use Doctrine\Common\Collections\Collection;
+
+
+class SpotBalance extends Balance
+{
+    protected SpotAsset $spot_asset;
+    protected Collection $transactions;
+
+    public static function create(SpotAsset $spot_asset, float $amount = 0): self
+    {
+        return new self($spot_asset, $amount);
+    }
+
+    private function __construct(SpotAsset $spot_asset, float $amount) {
+        parent::__construct(Balance::TYPE_SPOT, $amount);
+
+        $this->spot_asset = $spot_asset;
+        $this->transactions = new SpotTransactionCollection();
+    }
+
+    public function getAsset(): Asset
+    {
+        return $this->getSpotAsset();
+    }
+
+    public function getSpotAsset(): SpotAsset
+    {
+        return $this->spot_asset;
+    }
+}

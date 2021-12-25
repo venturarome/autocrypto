@@ -5,7 +5,7 @@
                           https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
     <entity name="App\Domain\Model\Asset\Leverage"
-            table="asset_pair_leverage"
+            table="spot_pair_leverage"
             repository-class="App\Infrastructure\Persistence\Doctrine\Asset\LeverageRepository">
 
         <id name="pair" association-key="true" />

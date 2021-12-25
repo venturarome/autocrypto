@@ -2,16 +2,14 @@
 
 namespace App\Application\Service\Account;
 
-use App\Domain\Event\Account\AccountCreated;
-use App\Domain\Factory\Account\AccountFactory;
-use App\Domain\Model\Account\Account;
-use App\Domain\Model\Asset\Asset;
-use App\Domain\Model\Asset\Balance;
-use App\Domain\Model\Asset\BalanceCollection;
+use App\Domain\Model\Account\SpotBalance;
+use App\Domain\Model\Account\SpotBalanceCollection;
+use App\Domain\Model\Account\StakingBalance;
+use App\Domain\Model\Account\StakingBalanceCollection;
 use App\Domain\Model\Event\Event;
-use App\Domain\Model\Shared\Amount\Amount;
 use App\Domain\Repository\Account\AccountRepository;
-use App\Domain\Repository\Asset\AssetRepository;
+use App\Domain\Repository\Asset\SpotAssetRepository;
+use App\Domain\Repository\Asset\StakingAssetRepository;
 use App\Infrastructure\Provider\Kraken\KrakenApiClient;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -20,19 +18,22 @@ use LengthException;
 class UpdateAccountBalancesService
 {
     private AccountRepository $account_repo;
-    private AssetRepository $asset_repo;
+    private SpotAssetRepository $spot_asset_repo;
+    private StakingAssetRepository $staking_asset_repo;
     private KrakenApiClient $kraken_api_client;
     private EntityManagerInterface $entity_manager;
 
 
     public function __construct(
         AccountRepository $account_repo,
-        AssetRepository $asset_repo,
+        SpotAssetRepository $spot_asset_repo,
+        StakingAssetRepository $staking_asset_repo,
         KrakenApiClient $kraken_api_client,
         EntityManagerInterface $entity_manager
     ) {
         $this->account_repo = $account_repo;
-        $this->asset_repo = $asset_repo;
+        $this->spot_asset_repo = $spot_asset_repo;
+        $this->staking_asset_repo = $staking_asset_repo;
         $this->kraken_api_client = $kraken_api_client;
         $this->entity_manager = $entity_manager;
     }
@@ -45,20 +46,34 @@ class UpdateAccountBalancesService
         $kraken_response = $this->kraken_api_client->getAccountBalance();
         $response_balances = $this->cleanAssetSymbols($kraken_response['result']);
 
-        // Create BalanceCollection with new balances
-        $new_balances = new BalanceCollection();
+        // Create BalanceCollections with new balances
+        $new_spot_balances = new SpotBalanceCollection();
+        $new_staking_balances = new StakingBalanceCollection();
         foreach ($response_balances as $symbol => $balance_str) {
-            if ($this->assetShouldBeExcluded($symbol)) { continue; }    // So far, I only want non-staked positions.
-            $amount = Amount::fromString($balance_str);
-            if ($amount->isZero()) {
+            $amount = (float)$balance_str;
+            if (abs($amount) < 1e-15) {
                 continue;
             }
-            $asset = $this->asset_repo->findBySymbolOrFail($symbol);
-            $new_balances->add(Balance::create($asset, $amount));
+
+            if ($this->isStakingAsset($symbol)) {
+                $asset = $this->staking_asset_repo->findBySymbolOrFail($symbol);
+                $new_staking_balances->add(StakingBalance::create($asset, $amount));
+            }
+            else {
+                $asset = $this->spot_asset_repo->findBySymbolOrFail($symbol);
+                $new_spot_balances->add(SpotBalance::create($asset, $amount));
+            }
         }
 
         // Send new balances to Account, so it can add/create/delete them as considers.
-        $throwable_events = $account->updateBalances($new_balances);  // Returning events is a dirty hack! Need to get Entities throw their own Events.
+        // Returning events is a dirty hack! Need to get Entities throw their own Events.
+        $throwable_events_spot = $account->updateSpotBalances($new_spot_balances);
+        $throwable_events_staking = $account->updateStakingBalances($new_staking_balances);
+        $throwable_events = array_merge($throwable_events_spot, $throwable_events_staking);
+
+        if (count($throwable_events) === 0) {
+            return;
+        }
 
         // Persist
         try {
@@ -75,7 +90,7 @@ class UpdateAccountBalancesService
         }
     }
 
-    private function assetShouldBeExcluded(string $symbol): bool
+    private function isStakingAsset(string $symbol): bool
     {
         return count(explode('.', $symbol)) > 1;
     }

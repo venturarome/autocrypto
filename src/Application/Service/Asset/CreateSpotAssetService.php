@@ -3,26 +3,26 @@
 namespace App\Application\Service\Asset;
 
 use App\Domain\Event\Asset\AssetCreated;
-use App\Domain\Model\Asset\Asset;
+use App\Domain\Model\Asset\SpotAsset;
 use App\Domain\Model\Event\Event;
-use App\Domain\Repository\Asset\AssetRepository;
+use App\Domain\Repository\Asset\SpotAssetRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 
-class CreateAssetService
+class CreateSpotAssetService
 {
     private EntityManagerInterface $entity_manager;
-    private AssetRepository $asset_repo;
+    private SpotAssetRepository $asset_repo;
 
     public function __construct(
-        AssetRepository $asset_repo,
+        SpotAssetRepository $asset_repo,
         EntityManagerInterface $entity_manager
     ) {
         $this->entity_manager = $entity_manager;
         $this->asset_repo = $asset_repo;
     }
 
-    public function execute(CreateAssetRequest $request): void
+    public function execute(CreateSpotAssetRequest $request): void
     {
         $symbol = $request->getSymbol();
 
@@ -30,16 +30,16 @@ class CreateAssetService
             return;
         }
 
-        if ($this->shouldBeExcluded($symbol)) {
+        if ($this->isStakingAsset($symbol)) { // StakingAssets can be populated with other Command-service
             return;
         }
 
-        $asset = Asset::create(
+        $asset = SpotAsset::create(
             $symbol,
             $request->getName(),
             $request->getDecimals(),
             $request->getDisplayDecimals(),
-            $this->guessType($request->getExtendedSymbol())
+            $this->guessSpotAssetSubtype($request->getExtendedSymbol())
         );
         $event = Event::createFrom(AssetCreated::raise($asset));
 
@@ -55,19 +55,19 @@ class CreateAssetService
         }
     }
 
-    private function shouldBeExcluded(string $symbol): bool
+    private function isStakingAsset(string $symbol): bool
     {
         return count(explode('.', $symbol)) > 1;
     }
 
-    private function guessType(string $extended_symbol): string
+    private function guessSpotAssetSubtype(string $extended_symbol): string
     {
         if (strlen($extended_symbol) === 4 && $extended_symbol[0] === 'Z') {
-            return Asset::TYPE_FIAT;
+            return SpotAsset::TYPE_FIAT;
         }
         if ($extended_symbol === 'CHF') {
-            return Asset::TYPE_FIAT;
+            return SpotAsset::TYPE_FIAT;
         }
-        return Asset::TYPE_CRYPTO;
+        return SpotAsset::TYPE_CRYPTO;
     }
 }

@@ -5,7 +5,7 @@
                           https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
     <embeddable name="App\Domain\Model\Shared\Amount\Amount">
-        <field name="value" column="value" type="integer" />
+        <field name="value" column="value" type="integer" /> <!-- This value should be modified to BIGINT in migrations! -->
         <field name="decimals" column="decimals" type="integer" />
     </embeddable>
 

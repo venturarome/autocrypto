@@ -4,22 +4,16 @@
                   xsi:schemaLocation="https://doctrine-project.org/schemas/orm/doctrine-mapping
                           https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
-    <entity name="App\Domain\Model\Asset\Asset"
-            table="asset"
-            repository-class="App\Infrastructure\Persistence\Doctrine\Asset\AssetRepository">
+    <mapped-superclass name="App\Domain\Model\Asset\Asset">
 
         <id name="id" type="integer" column="id">
             <generator strategy="AUTO" />
         </id>
-        <!-- unique and nullable defaults to false -->
         <field name="uuid" column="uuid" type="string" length="36" unique="true" />
         <field name="symbol" column="symbol" type="string" length="8" unique="true" />
-        <field name="name" column="name" type="string" length="32" nullable="true"/>
         <field name="decimals" column="decimals" type="integer" />
         <field name="display_decimals" column="display_decimals" type="integer" />
-        <field name="type" column="type" type="string" length="8" />
-        <embedded name="date_tracker" class="App\Domain\Model\Shared\DateTracker\DateTracker" use-column-prefix="false" />
 
-    </entity>
+    </mapped-superclass>
 
 </doctrine-mapping>

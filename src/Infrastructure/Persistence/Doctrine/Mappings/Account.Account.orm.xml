@@ -23,10 +23,22 @@
         <!-- https://www.doctrine-project.org/projects/doctrine-orm/en/2.10/reference/xml-mapping.html -->
         <!-- The many-to-one association is ALWAYS the owning side of any bidirectional association. Use 'inversed-by' (optional) to appear in the inverse side. -->
         <!-- The one-to-many association is ALWAYS the inverse side of any association. Use 'mapped-by' (required) to reference the field on the owning side. -->
-        <one-to-many field="balances" target-entity="App\Domain\Model\Asset\Balance" mapped-by="account">
+        <one-to-many field="spot_balances" target-entity="App\Domain\Model\Account\SpotBalance" mapped-by="account">
             <join-column name="account_id" referenced-column-name="id" />
             <cascade>
                 <!-- When we want this to be persisted when the current class is persisted -->
+                <cascade-persist />
+            </cascade>
+        </one-to-many>
+        <one-to-many field="staking_balances" target-entity="App\Domain\Model\Account\StakingBalance" mapped-by="account">
+            <join-column name="account_id" referenced-column-name="id" />
+            <cascade>
+                <!-- When we want this to be persisted when the current class is persisted -->
+                <cascade-persist />
+            </cascade>
+        </one-to-many>
+        <one-to-many field="preferences" target-entity="App\Domain\Model\Account\Preference" mapped-by="account">
+            <cascade>
                 <cascade-persist />
             </cascade>
         </one-to-many>

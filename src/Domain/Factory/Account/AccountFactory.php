@@ -3,6 +3,7 @@
 namespace App\Domain\Factory\Account;
 
 use App\Domain\Model\Account\Account;
+use App\Domain\Model\Asset\SpotBalanceCollection;
 use App\Domain\Model\Shared\DateTracker\DateTracker;
 use App\Domain\Repository\Account\AccountRepository;
 use App\Domain\Factory\ReflectionFactory;
@@ -29,6 +30,7 @@ class AccountFactory extends ReflectionFactory
             'status' => Account::STATUS_ACTIVE,
             'api_key' => $api_key,
             'secret_key' => $secret_key,
+            'balances' => new SpotBalanceCollection(),
             'date_tracker' => DateTracker::create()
 //            'timestamps' => new Timestamps($dt = new DateTimeImmutable(), $dt),
 //            'created_at' => $dt = new DateTimeImmutable(),

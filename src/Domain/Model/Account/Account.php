@@ -2,18 +2,16 @@
 
 namespace App\Domain\Model\Account;
 
-use App\Application\Exception\NotFoundException;
-use App\Domain\Event\Asset\BalanceCreated;
-use App\Domain\Event\Asset\BalanceDeleted;
-use App\Domain\Event\Asset\BalanceUpdated;
+use App\Domain\Event\Account\BalanceCreated;
+use App\Domain\Event\Account\BalanceUpdated;
 use App\Domain\Model\Asset\Asset;
-use App\Domain\Model\Asset\Balance;
-use App\Domain\Model\Asset\BalanceCollection;
-use App\Domain\Model\Shared\Amount\Amount;
+use App\Domain\Model\Asset\Pair;
+use App\Domain\Model\Asset\SpotAsset;
+use App\Domain\Model\Asset\StakingAsset;
 use App\Domain\Model\Shared\DateTracker\DateTracker;
-use Doctrine\Common\Collections\ArrayCollection;
+use App\Domain\Model\Trading\Order;
 use Doctrine\Common\Collections\Collection;
-use Ramsey\Uuid\UuidInterface;
+
 
 class Account
 {
@@ -31,7 +29,9 @@ class Account
     protected string $secret_key;
     protected DateTracker $date_tracker;
 
-    protected Collection $balances;
+    protected Collection $spot_balances;
+    protected Collection $staking_balances;
+    protected Collection $preferences;
 
 
     private function __construct() {
@@ -53,29 +53,72 @@ class Account
         return [$this->api_key, $this->secret_key];
     }
 
-    public function updateBalances(BalanceCollection $new_balances): array
+    public function updateBalances(SpotBalanceCollection $new_balances): array
+    {
+        $new_spot_balances = $new_balances->filterSpot();
+        $spot_events = $this->updateSpotBalances($new_spot_balances);
+
+        $new_staking_balances = $new_balances->filterStaking();
+        $staking_events = $this->updateStakingBalances($new_staking_balances);
+
+        return array_merge($spot_events, $staking_events);
+    }
+
+    public function updateSpotBalances(SpotBalanceCollection $new_balances): array
     {
         $throwable_events = []; // I need to do this until I manage to raise events from Entities
 
-        foreach ($this->getBalances() as $balance) {
-            /** @var Balance $balance */
+        foreach ($this->getSpotBalances() as $balance) {
+            /** @var SpotBalance $balance */
+
             $new_balance = $new_balances->findOneWithAssetSymbol($balance->getAssetSymbol());
-            if (!$new_balance) {
-                $balance->delete();
-                $throwable_events[] = BalanceDeleted::raise($balance);
+            if (!$new_balance && !$balance->isZero()) {
+                $balance->setZero();
+                $throwable_events[] = BalanceUpdated::raise($balance);
             }
-            else if (Amount::equals($balance->getAmount(), $new_balance->getAmount())) {
+            else if (abs($balance->getAmount() - $new_balance->getAmount()) > $balance->getMinChange()) {
                 $balance->update($new_balance->getAmount());
                 $throwable_events[] = BalanceUpdated::raise($balance);
             }
         }
 
         foreach ($new_balances as $new_balance) {
-            /** @var Balance $new_balance */
-            $balance = $this->getBalances()->findOneWithAssetSymbol($new_balance->getAssetSymbol());
+            /** @var SpotBalance $new_balance */
+            $balance = $this->getSpotBalances()->findOf($new_balance->getAsset());
             if (!$balance) {
                 $new_balance->assignTo($this);
-                $this->getBalances()->add($new_balance);
+                $this->getSpotBalances()->add($new_balance);
+                $throwable_events[] = BalanceCreated::raise($new_balance);
+            }
+        }
+
+        return $throwable_events;
+    }
+    // TODO try to merge in one method.
+    public function updateStakingBalances(StakingBalanceCollection $new_balances): array
+    {
+        $throwable_events = []; // I need to do this until I manage to raise events from Entities
+
+        foreach ($this->getStakingBalances() as $balance) {
+            /** @var StakingBalance $balance */
+
+            $new_balance = $new_balances->findOneWithAssetSymbol($balance->getAssetSymbol());
+            if (!$new_balance && !$balance->isZero()) {
+                $balance->setZero();
+                $throwable_events[] = BalanceUpdated::raise($balance);
+            }
+            else if (abs($balance->getAmount() - $new_balance->getAmount()) > $balance->getMinChange()) {
+                $balance->update($new_balance->getAmount());
+                $throwable_events[] = BalanceUpdated::raise($balance);
+            }
+        }
+
+        foreach ($new_balances as $new_balance) {
+            /** @var StakingBalance $new_balance */
+            $balance = $this->getStakingBalances()->findOf($new_balance->getAsset());
+            if (!$balance) {
+                $new_balance->assignTo($this);
+                $this->getStakingBalances()->add($new_balance);
                 $throwable_events[] = BalanceCreated::raise($new_balance);
             }
         }
@@ -83,17 +126,95 @@ class Account
         return $throwable_events;
     }
 
-    private function getBalances(): BalanceCollection
+    public function getSpotBalances(): SpotBalanceCollection
     {
-        if (!$this->balances instanceof BalanceCollection) {
-            $this->balances = new BalanceCollection($this->balances->toArray());
+        if (!$this->spot_balances instanceof SpotBalanceCollection) {
+            $this->spot_balances = new SpotBalanceCollection($this->spot_balances->toArray());
         }
-        return $this->balances;
+        return $this->spot_balances;
+    }
+
+    public function getStakingBalances(): StakingBalanceCollection
+    {
+        if (!$this->staking_balances instanceof StakingBalanceCollection) {
+            $this->staking_balances = new StakingBalanceCollection($this->staking_balances->toArray());
+        }
+        return $this->staking_balances;
     }
 
     public function hasBalanceOf(Asset $asset): bool
     {
-        return (bool)$this->getBalances()->findOf($asset);
+        return (bool)$this->getSpotBalances()->findOf($asset);
     }
 
+    /** $price is how much Base can be bought with one Quote */
+    public function canPlaceOrder(Order $order, float $price): bool
+    {
+        if ($order->isBuy()) {
+            return $this->canBuy($order->getPair(), $price * $order->getVolume());
+        }
+        return $this->canSell($order->getPair(), $order->getVolume());
+    }
+
+    private function canBuy(Pair $pair, float $quote_amount): bool
+    {
+        $quote_balance = $this->getSpotBalances()->findOneWithAssetSymbol($pair->getQuoteSymbol());
+        if (!$quote_balance) {
+            return false;
+        }
+        $available_amount = $quote_balance->getAmount();
+        return $available_amount > $quote_amount;   // TODO poner un límite de seguridad??
+    }
+
+    private function canSell(Pair $pair, float $base_amount): bool
+    {
+        $base_balance = $this->getSpotBalances()->findOneWithAssetSymbol($pair->getBaseSymbol());
+        if (!$base_balance) {
+            return false;
+        }
+        $available_amount = $base_balance->getAmount();
+        return $available_amount >= $base_amount;
+    }
+
+    public function canStake(SpotAsset $asset, float $amount): bool
+    {
+        $balance = $this->getSpotBalances()->findOf($asset);
+        if (!$balance) {
+            return false;
+        }
+        return ($balance->getAmount() - $amount) >= 1e-15;
+    }
+
+    public function canUnstake(StakingAsset $asset, float $amount): bool
+    {
+        $balance = $this->getStakingBalances()->findOf($asset);
+        if (!$balance) {
+            return false;
+        }
+        return ($balance->getAmount() - $amount) >= 1e-15;
+    }
+
+    // Preferences
+    private function getPreferences(): PreferenceCollection
+    {
+        if (!$this->preferences instanceof PreferenceCollection) {
+            $this->preferences = new PreferenceCollection($this->preferences->toArray());
+        }
+        return $this->preferences;
+    }
+
+    public function getQuoteSymbol(): string
+    {
+        return $this->getPreferences()->find(Preference::NAME_QUOTE_SYMBOL) ?? 'EUR';
+    }
+
+    public function getBuyStrategyName(): ?string
+    {
+        return $this->getPreferences()->find(Preference::NAME_BUY_STRATEGY);
+    }
+
+    public function getSellStrategyName(): ?string
+    {
+        return $this->getPreferences()->find(Preference::NAME_SELL_STRATEGY);
+    }
 }

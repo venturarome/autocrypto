@@ -47,11 +47,11 @@ class CreateAccountService
     private function validateKeys(string $api_key, string $secret_key): void
     {
         if (strlen($api_key) !== 56) {          // TODO check that it is always this size
-            throw new LengthException("api_key for Account is expected to have 64 characters.");
+            throw new LengthException("api_key for Account is expected to have 56 characters.");
         }
 
         if (strlen($secret_key) !== 88) {      // TODO check that it is always this size
-            throw new LengthException("secret_key for Account is expected to have 128 characters.");
+            throw new LengthException("secret_key for Account is expected to have 88 characters.");
         }
     }
 }

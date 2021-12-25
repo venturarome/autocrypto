@@ -7,20 +7,19 @@ use App\Domain\Model\Asset\Leverage;
 use App\Domain\Model\Asset\LeverageCollection;
 use App\Domain\Model\Asset\Pair;
 use App\Domain\Model\Event\Event;
-use App\Domain\Model\Shared\Amount\Amount;
-use App\Domain\Repository\Asset\AssetRepository;
+use App\Domain\Repository\Asset\SpotAssetRepository;
 use App\Domain\Repository\Asset\PairRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class CreatePairService
 {
     private PairRepository $pair_repo;
-    private AssetRepository $asset_repo;
+    private SpotAssetRepository $asset_repo;
     private EntityManagerInterface $entity_manager;
 
     public function __construct(
         PairRepository $pair_repo,
-        AssetRepository $asset_repo,
+        SpotAssetRepository $asset_repo,
         EntityManagerInterface $entity_manager
     ) {
         $this->pair_repo = $pair_repo;
@@ -57,7 +56,7 @@ class CreatePairService
             $quote,
             $request->getDecimals(),
             $request->getVolDecimals(),
-            Amount::fromString($request->getOrderMin()),
+            (float)$request->getOrderMin(),
             $leverages
         );
         $event = Event::createFrom(PairCreated::raise($pair));

@@ -2,8 +2,8 @@
 
 namespace App\Infrastructure\Command\Asset;
 
-use App\Application\Service\Asset\CreateAssetRequest;
-use App\Application\Service\Asset\CreateAssetService;
+use App\Application\Service\Asset\CreateSpotAssetRequest;
+use App\Application\Service\Asset\CreateSpotAssetService;
 use App\Infrastructure\Provider\Kaiko\KaikoApiClient;
 use App\Infrastructure\Provider\Kraken\KrakenApiClient;
 use Exception;
@@ -16,12 +16,12 @@ class PopulateAssetsCommand extends Command
 {
     private KrakenApiClient $kraken_api_client;
     private KaikoApiClient $kaiko_api_client;
-    private CreateAssetService $create_asset_service;
+    private CreateSpotAssetService $create_asset_service;
 
     public function __construct(
         KrakenApiClient $kraken_api_client,
         KaikoApiClient $kaiko_api_client,
-        CreateAssetService $create_asset_service
+        CreateSpotAssetService $create_asset_service
     ) {
         $this->kraken_api_client = $kraken_api_client;
         $this->kaiko_api_client = $kaiko_api_client;
@@ -62,7 +62,7 @@ class PopulateAssetsCommand extends Command
             $name = $key ? $kaiko_data[$key]["name"] : null;
             try {
                 $this->create_asset_service->execute(
-                    new CreateAssetRequest(
+                    new CreateSpotAssetRequest(
                         $symbol,
                         $name,
                         $asset['decimals'],

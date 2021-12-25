@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Domain\Event\Asset;
+namespace App\Domain\Event\Account;
 
 use App\Domain\Event\ThrowableEvent;
-use App\Domain\Model\Asset\Balance;
+use App\Domain\Model\Account\Balance;
 
-class BalanceCreated extends ThrowableEvent
+class BalanceUpdated extends ThrowableEvent
 {
-    protected const NAME = 'asset.balance.created';
+    protected const NAME = 'account.balance.updated';
 
     public static function raise(Balance $balance): self
     {
@@ -18,7 +18,7 @@ class BalanceCreated extends ThrowableEvent
     {
         $content = [
             'account_reference' => $balance->getAccount()->getReference(),
-            'amount' => $balance->getAmount()->toString()
+            'amount' => $balance->getAmount(),
         ];
 
         parent::__construct($balance->getUuid(), $content);

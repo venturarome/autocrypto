@@ -1,0 +1,33 @@
+<!-- https://www.doctrine-project.org/projects/doctrine-orm/en/2.10/reference/xml-mapping.html -->
+<doctrine-mapping xmlns="https://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="https://doctrine-project.org/schemas/orm/doctrine-mapping
+                          https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="App\Domain\Model\Trading\Transaction"
+            table="transaction"
+            repository-class="App\Infrastructure\Persistence\Doctrine\Transaction\TransactionRepository"
+            inheritance-type="SINGLE_TABLE">
+
+        <discriminator-column name="type" type="string" length="8" />
+        <discriminator-map>
+            <discriminator-mapping value="spot" class="App\Domain\Model\Trading\SpotTransaction" />
+            <discriminator-mapping value="staking" class="App\Domain\Model\Trading\StakingTransaction" />
+        </discriminator-map>
+
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO" />
+        </id>
+        <!-- unique and nullable defaults to false -->
+        <!-- 'unique=true' creates an 'unique index' -->
+        <field name="uuid" column="uuid" type="string" length="36" unique="true" />
+        <field name="reference" column="reference" type="string" length="32" unique="true" />
+        <field name="operation" column="operation" type="string" length="16" />
+        <field name="operation_reference" column="operation_reference" type="string" length="32" />
+        <field name="timestamp" column="timestamp" type="float" />
+        <field name="amount" column="amount" type="float" />
+        <field name="fee" column="fee" type="float" />
+
+    </entity>
+
+</doctrine-mapping>

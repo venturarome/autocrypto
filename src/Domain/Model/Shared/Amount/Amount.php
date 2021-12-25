@@ -10,7 +10,9 @@ class Amount
 
     public static function fromString(string $amount): self
     {
-        $amount = rtrim($amount, '0');
+        if (str_contains($amount, ',') || str_contains($amount, '.')) {
+            $amount = rtrim($amount, '0');
+        }
 
         $value = (int)str_replace([',', '.'], '', $amount);
         if ($value === 0) {
@@ -32,6 +34,11 @@ class Amount
         }
 
         return new self($value, strlen($dec_part));
+    }
+
+    public static function fromNumber(int|float $amount): Amount
+    {
+        return self::fromString((string)$amount);
     }
 
     public static function zero(): self
@@ -84,6 +91,23 @@ class Amount
             max($a1->decimals, $a2->decimals)
         );
     }
+
+    public static function scale(Amount $a1, float $scale): Amount
+    {
+        // We have to round to avoid a huge amount of decimals that could cause Amount::value to exceep PHP_MAX_INT
+        $initial_decimals = $a1->decimals;
+        return self::fromNumber(round($scale * $a1->toNumber(), $initial_decimals));
+    }
+
+    public static function interpolate(float $weight1, Amount $a1, Amount $a2): Amount
+    {
+        if ($weight1 < 0 || $weight1 > 1) {
+            throw new \InvalidArgumentException("Weight must be a value between 0 and 1");
+        }
+
+        return self::subtract($a2, self::scale(self::subtract($a2, $a1), $weight1));
+    }
+
 
     public static function equals(Amount $a1, Amount $a2): bool
     {

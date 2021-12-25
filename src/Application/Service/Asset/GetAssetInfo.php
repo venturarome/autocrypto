@@ -4,6 +4,7 @@ namespace App\Application\Service\Asset;
 
 use App\Infrastructure\Provider\Kraken\KrakenApiClient;
 
+// TODO poco uso! en vez de usar el cliente de kraken, deberíamos leer en nuestra BD!!
 class GetAssetInfo
 {
 

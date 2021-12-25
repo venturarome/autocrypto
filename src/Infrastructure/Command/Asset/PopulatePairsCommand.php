@@ -2,8 +2,8 @@
 
 namespace App\Infrastructure\Command\Asset;
 
-use App\Application\Service\Asset\CreateAssetRequest;
-use App\Application\Service\Asset\CreateAssetService;
+use App\Application\Service\Asset\CreateSpotAssetRequest;
+use App\Application\Service\Asset\CreateSpotAssetService;
 use App\Application\Service\Asset\CreatePairRequest;
 use App\Application\Service\Asset\CreatePairService;
 use App\Infrastructure\Provider\Kaiko\KaikoApiClient;

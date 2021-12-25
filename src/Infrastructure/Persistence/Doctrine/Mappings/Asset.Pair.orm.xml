@@ -5,7 +5,7 @@
                           https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
     <entity name="App\Domain\Model\Asset\Pair"
-            table="asset_pair"
+            table="spot_pair"
             repository-class="App\Infrastructure\Persistence\Doctrine\Asset\PairRepository">
 
         <id name="id" type="integer" column="id">
@@ -13,16 +13,15 @@
         </id>
         <field name="uuid" column="uuid" type="string" length="36" unique="true" />
         <field name="symbol" column="symbol" type="string" length="16" unique="true" />
-        <many-to-one field="base" target-entity="App\Domain\Model\Asset\Asset">
+        <many-to-one field="base" target-entity="App\Domain\Model\Asset\SpotAsset">
             <join-column name="base_id" referenced-column-name="id" />
         </many-to-one>
-        <many-to-one field="quote" target-entity="App\Domain\Model\Asset\Asset">
+        <many-to-one field="quote" target-entity="App\Domain\Model\Asset\SpotAsset">
             <join-column name="quote_id" referenced-column-name="id" />
         </many-to-one>
         <field name="decimals" column="decimals" type="integer" />
         <field name="vol_decimals" column="vol_decimals" type="integer" />
-        <embedded name="order_min" class="App\Domain\Model\Shared\Amount\Amount" />
-        <embedded name="date_tracker" class="App\Domain\Model\Shared\DateTracker\DateTracker" use-column-prefix="false" />
+        <field name="order_min" column="order_min" type="float" />
 
         <one-to-many field="leverages" target-entity="App\Domain\Model\Asset\Leverage" mapped-by="pair">
             <cascade>

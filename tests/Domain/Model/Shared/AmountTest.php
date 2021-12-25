@@ -24,6 +24,14 @@ class AmountTest extends TestCase
         $this->assertEquals(0, $amount->getDecimals());
     }
 
+    public function testAmountIsCreatedFromStringContainingOnlyIntegerPartEndingInZero(): void
+    {
+        $amount = Amount::fromString("1200");
+
+        $this->assertEquals(1200, $amount->getValue());
+        $this->assertEquals(0, $amount->getDecimals());
+    }
+
     public function testAmountIsCreatedFromStringContainingOnlyDecimals(): void
     {
         $amount = Amount::fromString("0.1234");
@@ -77,6 +85,22 @@ class AmountTest extends TestCase
         $amount = Amount::fromString("-123.45");
 
         $this->assertEquals(-12345, $amount->getValue());
+        $this->assertEquals(2, $amount->getDecimals());
+    }
+
+    public function testAmountIsCreatedFromInteger(): void
+    {
+        $amount = Amount::fromNumber(12345);
+
+        $this->assertEquals(12345, $amount->getValue());
+        $this->assertEquals(0, $amount->getDecimals());
+    }
+
+    public function testAmountIsCreatedFromFloat(): void
+    {
+        $amount = Amount::fromNumber(123.45);
+
+        $this->assertEquals(12345, $amount->getValue());
         $this->assertEquals(2, $amount->getDecimals());
     }
 
@@ -178,5 +202,36 @@ class AmountTest extends TestCase
 
         $this->assertEquals(-509, $sum->getValue());
         $this->assertEquals(2, $sum->getDecimals());
+    }
+
+    public function testScaleWithRoundedDecimals(): void
+    {
+        $a1 = Amount::fromString("-12345.6789");
+        $scaled = Amount::scale($a1, 0.0001);
+
+        $this->assertEquals(-12346, $scaled->getValue());
+        $this->assertEquals(4, $scaled->getDecimals());
+    }
+
+    public function testInterpolationWithoutRounding(): void
+    {
+        $a1 = Amount::fromString("10");
+        $a2 = Amount::fromNumber(20);
+
+        $scaled = Amount::interpolate(0.1, $a1, $a2);
+
+        $this->assertEquals(19, $scaled->getValue());
+        $this->assertEquals(0, $scaled->getDecimals());
+    }
+
+    public function testInterpolationWithRoundedDecimals(): void
+    {
+        $a1 = Amount::fromString("10.5");
+        $a2 = Amount::fromNumber(16);
+
+        $scaled = Amount::interpolate(0.5, $a1, $a2);   // 0.5*16 + 0.5*10.5 = 13.25 --> rounds to 13.2
+
+        $this->assertEquals(132, $scaled->getValue());
+        $this->assertEquals(1, $scaled->getDecimals());
     }
 }

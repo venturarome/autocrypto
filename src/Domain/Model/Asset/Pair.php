@@ -2,32 +2,29 @@
 
 namespace App\Domain\Model\Asset;
 
-use App\Domain\Model\Shared\Amount\Amount;
 use App\Domain\Model\Shared\DateTracker\DateTracker;
 use Doctrine\Common\Collections\Collection;
 use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
 
 class Pair
 {
     protected int $id;
     protected string $uuid;
     protected string $symbol;     // kraken: name
-    protected Asset $base;
-    protected Asset $quote;
+    protected SpotAsset $base;
+    protected SpotAsset $quote;
     protected int $decimals;      // kraken: pair_decimals: it is price precision
     protected int $vol_decimals;  // kraken: lot_decimals: it is the maximal precision of order size (volume), which is in base currency
-    protected Amount $order_min;   // kraken: ordermin: Minimum order size (in terms of base currency)s
+    protected float $order_min;   // kraken: ordermin: Minimum order size (in terms of base currency)s
     protected Collection $leverages;    // Leverage[]
-    protected DateTracker $date_tracker;
 
     public static function create(
         string $symbol,
-        Asset $base,
-        Asset $quote,
+        SpotAsset $base,
+        SpotAsset $quote,
         int $decimals,
         int $vol_decimals,
-        Amount $order_min,
+        float $order_min,
         LeverageCollection $leverages
     ): self
     {
@@ -36,11 +33,11 @@ class Pair
 
     private function __construct(
         string $symbol,
-        Asset $base,
-        Asset $quote,
+        SpotAsset $base,
+        SpotAsset $quote,
         int $decimals,
         int $vol_decimals,
-        Amount $order_min,
+        float $order_min,
         LeverageCollection $leverages
     ) {
         $this->uuid = Uuid::uuid6()->toString();
@@ -62,5 +59,25 @@ class Pair
     public function getSymbol(): string
     {
         return $this->symbol;
+    }
+
+    public function getBase(): SpotAsset
+    {
+        return $this->base;
+    }
+
+    public function getQuote(): SpotAsset
+    {
+        return $this->quote;
+    }
+
+    public function getBaseSymbol(): string
+    {
+        return $this->base->getSymbol();
+    }
+
+    public function getQuoteSymbol(): string
+    {
+        return $this->quote->getSymbol();
     }
 }

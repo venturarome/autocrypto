@@ -3,7 +3,7 @@
 namespace App\Application\Service\Asset;
 
 
-class CreateAssetRequest
+class CreateSpotAssetRequest
 {
     private string $symbol;
     private ?string $name;
