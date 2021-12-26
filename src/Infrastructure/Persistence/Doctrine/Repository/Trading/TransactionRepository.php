@@ -17,6 +17,6 @@ class TransactionRepository extends ServiceEntityRepository implements Transacti
 
     public function findByReference(string $reference): ?Transaction
     {
-        // TODO: Implement findByReference() method.
+        return $this->findOneBy(['reference' => $reference]);
     }
 }

@@ -68,6 +68,7 @@ class Account
     {
         $throwable_events = []; // I need to do this until I manage to raise events from Entities
 
+        // Update current balances
         foreach ($this->getSpotBalances() as $balance) {
             /** @var SpotBalance $balance */
 
@@ -82,9 +83,10 @@ class Account
             }
         }
 
+        // Add new balances
         foreach ($new_balances as $new_balance) {
             /** @var SpotBalance $new_balance */
-            $balance = $this->getSpotBalances()->findOf($new_balance->getAsset());
+            $balance = $this->getSpotBalances()->findOfAsset($new_balance->getAsset());
             if (!$balance) {
                 $new_balance->assignTo($this);
                 $this->getSpotBalances()->add($new_balance);
@@ -99,6 +101,7 @@ class Account
     {
         $throwable_events = []; // I need to do this until I manage to raise events from Entities
 
+        // Update current balances
         foreach ($this->getStakingBalances() as $balance) {
             /** @var StakingBalance $balance */
 
@@ -113,9 +116,10 @@ class Account
             }
         }
 
+        // Add new balances
         foreach ($new_balances as $new_balance) {
             /** @var StakingBalance $new_balance */
-            $balance = $this->getStakingBalances()->findOf($new_balance->getAsset());
+            $balance = $this->getStakingBalances()->findOfAsset($new_balance->getAsset());
             if (!$balance) {
                 $new_balance->assignTo($this);
                 $this->getStakingBalances()->add($new_balance);
@@ -144,7 +148,7 @@ class Account
 
     public function hasBalanceOf(Asset $asset): bool
     {
-        return (bool)$this->getSpotBalances()->findOf($asset);
+        return (bool)$this->getSpotBalances()->findOfAsset($asset);
     }
 
     /** $price is how much Base can be bought with one Quote */
@@ -178,7 +182,7 @@ class Account
 
     public function canStake(SpotAsset $asset, float $amount): bool
     {
-        $balance = $this->getSpotBalances()->findOf($asset);
+        $balance = $this->getSpotBalances()->findOfAsset($asset);
         if (!$balance) {
             return false;
         }
@@ -187,7 +191,7 @@ class Account
 
     public function canUnstake(StakingAsset $asset, float $amount): bool
     {
-        $balance = $this->getStakingBalances()->findOf($asset);
+        $balance = $this->getStakingBalances()->findOfAsset($asset);
         if (!$balance) {
             return false;
         }

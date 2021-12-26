@@ -24,7 +24,7 @@ class StakingTransaction extends Transaction
         $this->staking_balance = $staking_balance;
     }
 
-    public function getBalance(): Balance
+    public function getBalance(): StakingBalance
     {
         return $this->getStakingBalance();
     }

@@ -11,6 +11,7 @@
         <many-to-one field="spot_balance" target-entity="App\Domain\Model\Account\SpotBalance" inversed-by="transactions">
             <join-column name="balance_id" referenced-column-name="id" />
         </many-to-one>
+        <field name="price" column="price" type="float" nullable="true" />
 
     </entity>
 

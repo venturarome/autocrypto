@@ -3,6 +3,7 @@
 namespace App\Domain\Model\Trading;
 
 
+use App\Domain\Model\Account\Balance;
 use Ramsey\Uuid\Uuid;
 
 abstract class Transaction
@@ -47,10 +48,18 @@ abstract class Transaction
         $this->reference = $reference;
         $this->type = $type;
         $this->operation = $operation;
+        $this->throwIfUnclassifiedOperation();
         $this->operation_reference = $operation_reference;
         $this->timestamp = $timestamp;
         $this->amount = $amount;
         $this->fee = $fee;
+    }
+
+    protected function throwIfUnclassifiedOperation(): void
+    {
+        if (in_array($this->operation, [self::OPERATION_MARGIN, self::OPERATION_ROLLOVER, self::OPERATION_SETTLED, self::OPERATION_ADJUSTMENT], true)) {
+            throw new \DomainException("Unclassified Transaction::operation: {$this->operation}. Please, classify it on 'trade' or 'transfer'.");
+        }
     }
 
     public function getUuid(): string
@@ -73,6 +82,37 @@ abstract class Transaction
         return $this->operation;
     }
 
+    /** There is a base and a quote asset */
+    public function isTrade(): bool
+    {
+        return in_array($this->operation, self::getTradeOperations(), true);
+    }
+
+    protected static function getTradeOperations(): array
+    {
+        return [
+            self::OPERATION_SPEND,      // Sell, from the App
+            self::OPERATION_RECEIVE,    // Buy, from the App
+            self::OPERATION_TRADE,      // Buy or Sell, from REST
+        ];
+    }
+
+    /** Only moves money */
+    public function isTransfer(): bool
+    {
+        return in_array($this->operation, self::getTransferOperations(), true);
+    }
+
+    protected static function getTransferOperations(): array
+    {
+        return [
+            self::OPERATION_DEPOSIT,    // Add money to the platform
+            self::OPERATION_WITHDRAW,   // Add money to the platform
+            self::OPERATION_TRANSFER,   // So far, for staking/unstaking
+            self::OPERATION_STAKING,    // Receive rewards for staked assets
+        ];
+    }
+
     public function getOperationReference(): string
     {
         return $this->operation_reference;
@@ -83,8 +123,6 @@ abstract class Transaction
         return $this->timestamp;
     }
 
-    abstract public function getBalance();
-
     public function getAmount(): float
     {
         return $this->amount;
@@ -93,5 +131,12 @@ abstract class Transaction
     public function getFee(): float
     {
         return $this->fee;
+    }
+
+    abstract public function getBalance();
+
+    public function getAssetSymbol(): string
+    {
+        return $this->getBalance()->getAssetSymbol();
     }
 }

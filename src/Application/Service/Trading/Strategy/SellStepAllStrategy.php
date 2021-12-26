@@ -52,7 +52,7 @@ class SellStepAllStrategy extends SellStrategy
             ) {
                 continue;
             }
-            $base_amount = $crypto_balances->findOf($base)->getAmount();
+            $base_amount = $crypto_balances->findOfAsset($base)->getAmount();
             $orders->add(Order::createMarketSell($account, $candle_collection->getPair(), $base_amount));
         }
 

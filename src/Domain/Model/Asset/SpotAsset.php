@@ -38,6 +38,16 @@ class SpotAsset extends Asset
         return $this->type;
     }
 
+    public function isFiat(): bool
+    {
+        return $this->type === self::TYPE_FIAT;
+    }
+
+    public function isCrypto(): bool
+    {
+        return $this->type === self::TYPE_CRYPTO;
+    }
+
     public function canBeStaked(): bool
     {
         return !is_null($this->staking_asset);

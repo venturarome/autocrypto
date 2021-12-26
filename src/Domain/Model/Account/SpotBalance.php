@@ -25,7 +25,7 @@ class SpotBalance extends Balance
         $this->transactions = new SpotTransactionCollection();
     }
 
-    public function getAsset(): Asset
+    public function getAsset(): SpotAsset
     {
         return $this->getSpotAsset();
     }

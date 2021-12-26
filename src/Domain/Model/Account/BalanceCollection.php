@@ -2,6 +2,7 @@
 
 namespace App\Domain\Model\Account;
 
+use App\Application\Exception\NotFoundException;
 use App\Domain\Model\Asset\Asset;
 use App\Domain\Model\Asset\AssetCollection;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -32,7 +33,7 @@ class BalanceCollection extends ArrayCollection
         return $staking;
     }
 
-    public function findOf(Asset $asset): ?Balance
+    public function findOfAsset(Asset $asset): ?Balance
     {
         $symbol = $asset->getSymbol();
         foreach($this as $balance) {
@@ -53,6 +54,15 @@ class BalanceCollection extends ArrayCollection
             }
         }
         return null;
+    }
+
+    public function findOfAssetOrFail(Asset $asset): Balance
+    {
+        $balance = $this->findOfAsset($asset);
+        if (!$balance) {
+            throw new NotFoundException("Balance with asset {$asset->getSymbol()} not found!");
+        }
+        return $balance;
     }
 
     public function getAssets(): AssetCollection

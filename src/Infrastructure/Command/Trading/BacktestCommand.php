@@ -196,8 +196,8 @@ class BacktestCommand extends Command
 
             $base = $order->getBaseAsset();
             $quote = $order->getQuoteAsset();
-            $base_balance = $balances->findOf($base);
-            $quote_balance = $balances->findOf($quote);
+            $base_balance = $balances->findOfAsset($base);
+            $quote_balance = $balances->findOfAsset($quote);
             $base_volume = $order->getVolume();
             $quote_volume = $base_volume * $last_candle->getClose();
 
@@ -241,8 +241,8 @@ class BacktestCommand extends Command
     private function calculateTotalAmout(Account $account, SpotAsset $base, SpotAsset $quote, float $price): float
     {
         $balances = $account->getSpotBalances();
-        $base_balance = $balances->findOf($base);
-        $quote_balance = $balances->findOf($quote);
+        $base_balance = $balances->findOfAsset($base);
+        $quote_balance = $balances->findOfAsset($quote);
         $base_amount = $base_balance ? $base_balance->getAmount() : 0.0;
         $quote_amount = $quote_balance ? $quote_balance->getAmount() : 0.0;
         return $quote_amount + $price * $base_amount;
