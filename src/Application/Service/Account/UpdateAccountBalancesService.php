@@ -51,9 +51,6 @@ class UpdateAccountBalancesService
         $new_staking_balances = new StakingBalanceCollection();
         foreach ($response_balances as $symbol => $balance_str) {
             $amount = (float)$balance_str;
-            if (abs($amount) < 1e-15) {
-                continue;
-            }
 
             if ($this->isStakingAsset($symbol)) {
                 $asset = $this->staking_asset_repo->findBySymbolOrFail($symbol);
