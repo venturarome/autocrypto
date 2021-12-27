@@ -5,7 +5,6 @@ namespace App\Application\Service\Trading\Strategy;
 use App\Domain\Model\Account\Account;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
-use App\Domain\Model\Trading\OrderCollection;
 
 class SellStepAllStrategy extends SellStrategy
 {
@@ -30,10 +29,8 @@ class SellStepAllStrategy extends SellStrategy
         return $account->getSpotBalances()->filterCrypto()->filterNonZero()->count() > 0;
     }
 
-    public function run(Account $account, CandleCollection $candles): OrderCollection
+    public function run(Account $account, CandleCollection $candles): ?Order
     {
-        $orders = new OrderCollection();
-
         $crypto_balances = $account->getSpotBalances()->filterCrypto();
         $owned_crypto_asset_symbols = $crypto_balances->getAssets()->getSymbolsArray();
 
@@ -41,12 +38,11 @@ class SellStepAllStrategy extends SellStrategy
         if ($candles->getPerformance()->getPercentageReturn() > self::MAXIMUM_RETURN
             || !in_array($base->getSymbol(), $owned_crypto_asset_symbols, true)
         ) {
-            return $orders;
+            return null;
         }
         $base_amount = $crypto_balances->findOfAsset($base)->getAmount();
-        $orders->add(Order::createMarketSell($account, $candles->getPair(), $base_amount));
 
-        return $orders;
+        return Order::createMarketSell($account, $candles->getPair(), $base_amount);
     }
 
 //    public function curateData(CandleCollection $candles): CandleCollection

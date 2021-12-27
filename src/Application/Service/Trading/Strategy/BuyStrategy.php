@@ -4,7 +4,7 @@ namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
 use App\Domain\Model\Trading\CandleCollection;
-use App\Domain\Model\Trading\OrderCollection;
+use App\Domain\Model\Trading\Order;
 
 abstract class BuyStrategy extends Strategy
 {
@@ -16,5 +16,5 @@ abstract class BuyStrategy extends Strategy
 
     abstract public function checkCanBuy(Account $account): bool;
 
-    abstract public function run(Account $account, CandleCollection $candles): OrderCollection; // TODO hacer que el return sea ?Order
+    abstract public function run(Account $account, CandleCollection $candles): ?Order;
 }

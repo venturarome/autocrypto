@@ -80,21 +80,19 @@ class AutoCryptoCommand extends Command
                 /** @var Pair $pair */
                 $candles = $this->getRealTimeCandles($pair, 1);
 
-                $buy_orders = $sell_orders = new OrderCollection();
-                if ($buy_strategy->checkCanBuy($account)) {
-                    $buy_orders = $buy_strategy->run($account, $candles);
-                }
-                else if ($sell_strategy->checkCanSell($account)) {
-                    $sell_orders = $sell_strategy->run($account, $candles);
-                }
-                $orders = new OrderCollection(array_merge($buy_orders->toArray(), $sell_orders->toArray()));
+                $order = null;
 
-                foreach ($orders as $order) {
-                    /** @var Order $order */
-                    if ($account->canPlaceOrder($order, $candles->getLastPrice())) {
-                        $this->placeOrder($order);
-                        $this->update_balances_service->execute(new UpdateAccountBalancesRequest($reference));
-                    }
+                if ($buy_strategy->checkCanBuy($account)) {
+                    $order = $buy_strategy->run($account, $candles);
+                }
+
+                if (!$order && $sell_strategy->checkCanSell($account)) {
+                    $order = $sell_strategy->run($account, $candles);
+                }
+
+                if ($account->canPlaceOrder($order, $candles->getLastPrice())) {
+                    $this->placeOrder($order);
+                    $this->update_balances_service->execute(new UpdateAccountBalancesRequest($reference));
                 }
             }
         }

@@ -4,10 +4,8 @@ namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
 use App\Domain\Model\Account\SpotBalance;
-use App\Domain\Model\Trading\Candle;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
-use App\Domain\Model\Trading\OrderCollection;
 
 class BuyStepAllStrategy extends BuyStrategy
 {
@@ -37,28 +35,27 @@ class BuyStepAllStrategy extends BuyStrategy
             && $this->balance_eur->getAmount() - self::SAFETY_MARGIN > $this->balance_eur->getMinChange();
     }
 
-    public function run(Account $account, CandleCollection $candles): OrderCollection
+    public function run(Account $account, CandleCollection $candles): ?Order
     {
-        $orders = new OrderCollection();
-
         if($candles->count() === 0) {
-            return $orders;
+            return null;
         }
 
 //        $candles = $this->curateData($candles);
 
         $performance = $candles->getPerformance();
-        if ($performance->getPercentageReturn() > self::MINIMUM_RETURN) {
-            /** @var Candle $last_candle */
-            $price = $candles->getLastPrice();
-            $base_amount = ($this->balance_eur->getAmount() - self::SAFETY_MARGIN) / $price;
-            $orders->add(Order::createMarketBuy(
-                $account,
-                $performance->getPair(),
-                $base_amount,
-            ));
+
+        if ($performance->getPercentageReturn() <= self::MINIMUM_RETURN) {
+            return null;
         }
-        return $orders;
+
+        $price = $candles->getLastPrice();
+        $base_amount = ($this->balance_eur->getAmount() - self::SAFETY_MARGIN) / $price;
+        return Order::createMarketBuy(
+            $account,
+            $performance->getPair(),
+            $base_amount,
+        );
     }
 
     public function curateData(CandleCollection $candles): CandleCollection

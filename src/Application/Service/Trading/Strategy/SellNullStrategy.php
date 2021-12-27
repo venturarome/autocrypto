@@ -4,7 +4,7 @@ namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
 use App\Domain\Model\Trading\CandleCollection;
-use App\Domain\Model\Trading\OrderCollection;
+use App\Domain\Model\Trading\Order;
 
 
 class SellNullStrategy extends SellStrategy
@@ -26,8 +26,8 @@ class SellNullStrategy extends SellStrategy
         return true;
     }
 
-    public function run(Account $account, CandleCollection $candles): OrderCollection
+    public function run(Account $account, CandleCollection $candles): ?Order
     {
-        return new OrderCollection();
+        return null;
     }
 }
