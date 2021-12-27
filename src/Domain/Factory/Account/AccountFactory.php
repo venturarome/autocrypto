@@ -3,11 +3,11 @@
 namespace App\Domain\Factory\Account;
 
 use App\Domain\Model\Account\Account;
-use App\Domain\Model\Asset\SpotBalanceCollection;
+use App\Domain\Model\Account\SpotBalanceCollection;
+use App\Domain\Model\Account\StakingBalanceCollection;
 use App\Domain\Model\Shared\DateTracker\DateTracker;
 use App\Domain\Repository\Account\AccountRepository;
 use App\Domain\Factory\ReflectionFactory;
-use DateTimeImmutable;
 use Ramsey\Uuid\Uuid;
 
 class AccountFactory extends ReflectionFactory
@@ -23,14 +23,14 @@ class AccountFactory extends ReflectionFactory
     {
         $account = $this->instantiateObject(Account::class);
 
-
         $parameters = [
             'uuid' => Uuid::uuid6(),
             'reference' => $this->generateUniqueReference(),
             'status' => Account::STATUS_ACTIVE,
             'api_key' => $api_key,
             'secret_key' => $secret_key,
-            'balances' => new SpotBalanceCollection(),
+            'spot_balances' => new SpotBalanceCollection(),
+            'staking_balances' => new StakingBalanceCollection(),
             'date_tracker' => DateTracker::create()
 //            'timestamps' => new Timestamps($dt = new DateTimeImmutable(), $dt),
 //            'created_at' => $dt = new DateTimeImmutable(),
