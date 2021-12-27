@@ -35,6 +35,11 @@ class SpotTransaction extends Transaction
         return $this->spot_balance;
     }
 
+    public function isFromCryptoAsset(): bool
+    {
+        return $this->getBalance()->getAsset()->isCrypto();
+    }
+
     public static function setPriceFromCounterparts(self $t1, self $t2): void
     {
         // Crypto ==> Base ==> contains 'price'
@@ -56,5 +61,10 @@ class SpotTransaction extends Transaction
     private function setPrice(float $price): void
     {
         $this->price = $price;
+    }
+
+    public function getPrice(): ?float
+    {
+        return $this->price;
     }
 }
