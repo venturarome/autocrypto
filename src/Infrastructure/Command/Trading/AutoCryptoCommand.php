@@ -9,7 +9,6 @@ use App\Application\Service\Trading\Strategy\SellStrategy;
 use App\Application\Service\Trading\Strategy\StrategyFactory;
 use App\Domain\Model\Asset\Pair;
 use App\Domain\Model\Trading\CandleCollection;
-use App\Domain\Model\Trading\CandleMap;
 use App\Domain\Model\Trading\Order;
 use App\Domain\Model\Trading\OrderCollection;
 use App\Domain\Repository\Account\AccountRepository;
@@ -92,7 +91,7 @@ class AutoCryptoCommand extends Command
 
                 foreach ($orders as $order) {
                     /** @var Order $order */
-                    if ($account->canPlaceOrder($order, $candles->getLastPriceOf($pair))) {
+                    if ($account->canPlaceOrder($order, $candles->getLastPrice())) {
                         $this->placeOrder($order);
                         $this->update_balances_service->execute(new UpdateAccountBalancesRequest($reference));
                     }
@@ -103,13 +102,12 @@ class AutoCryptoCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function getRealTimeCandles(Pair $pair, int $interval): CandleMap
+    private function getRealTimeCandles(Pair $pair, int $interval): CandleCollection
     {
         $pair_candles = $this->kraken_api_client->getOHLCData(['pair' => $pair->getSymbol(), 'interval' => $interval])['result'];
         unset($pair_candles['last']);
         $raw_candles = reset($pair_candles);
-        $candle_col = CandleCollection::createFromRawData($pair, $interval, $raw_candles);
-        return new CandleMap($interval, [$candle_col]);
+        return CandleCollection::createFromRawData($pair, $interval, $raw_candles);
     }
 
     private function placeOrder(Order $order, bool $wait_until_completed = true): void

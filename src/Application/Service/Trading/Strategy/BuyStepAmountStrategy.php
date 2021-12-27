@@ -6,7 +6,6 @@ use App\Domain\Model\Account\Account;
 use App\Domain\Model\Account\SpotBalance;
 use App\Domain\Model\Trading\Candle;
 use App\Domain\Model\Trading\CandleCollection;
-use App\Domain\Model\Trading\CandleMap;
 use App\Domain\Model\Trading\Order;
 use App\Domain\Model\Trading\OrderCollection;
 
@@ -33,64 +32,50 @@ class BuyStepAmountStrategy extends BuyStrategy
         return 5;
     }
 
-//    public function getCandlesTimespan(): int
-//    {
-//        return 5;
-//    }
-
     public function checkCanBuy(Account $account): bool
     {
         return ($this->balance_eur = $account->getSpotBalances()->findOneWithAssetSymbol('EUR'))
             && $this->balance_eur->getAmount() - self::SAFETY_MARGIN > $this->balance_eur->getMinChange();
     }
 
-    public function run(Account $account, CandleMap $candle_map): OrderCollection
+    public function run(Account $account, CandleCollection $candles): OrderCollection
     {
         $orders = new OrderCollection();
 
-        if($candle_map->count() === 0) {
+        if($candles->count() === 0) {
             return $orders;
         }
 
         $crypto_balances = $account->getSpotBalances()->filterCrypto();
         $owned_crypto_asset_symbols = $crypto_balances->getAssets()->getSymbolsArray();
 
-        $candle_map = $this->curateData($candle_map);
-        foreach ($candle_map as $candle_collection) {
-            /** @var CandleCollection $candle_collection */
-            $quote = $candle_collection->getPair()->getQuote();
-            if ($candle_collection->getPerformance()->getReturn() < self::MINIMUM_RETURN     // poor performance
-                || in_array($quote->getSymbol(), $owned_crypto_asset_symbols, true)     // or already has a position
-            ) {
-                continue;
-            }
+        $candles = $this->curateData($candles);
 
-            /** @var Candle $last_candle */
-            $price = $candle_collection->getLastPrice();
-            $quote_amount = min(self::BUY_AMOUNT_QUOTE, max(0, $this->balance_eur->getAmount() - self::SAFETY_MARGIN));
-            $base_amount =  $quote_amount / $price;
-            $orders->add(Order::createMarketBuy(
-                $account,
-                $candle_collection->getPair(),
-                $base_amount,
-            ));
+        $quote = $candles->getPair()->getQuote();
+        if ($candles->getPerformance()->getReturn() < self::MINIMUM_RETURN     // poor performance
+            || in_array($quote->getSymbol(), $owned_crypto_asset_symbols, true)     // or already has a position
+        ) {
+            return $orders;
         }
+
+        /** @var Candle $last_candle */
+        $price = $candles->getLastPrice();
+        $quote_amount = min(self::BUY_AMOUNT_QUOTE, max(0, $this->balance_eur->getAmount() - self::SAFETY_MARGIN));
+        $base_amount =  $quote_amount / $price;
+        $orders->add(Order::createMarketBuy(
+            $account,
+            $candles->getPair(),
+            $base_amount,
+        ));
 
         return $orders;
     }
 
-    public function curateData(CandleMap $candle_map): CandleMap
+    public function curateData(CandleCollection $candles): CandleCollection
     {
-        return $candle_map
+        return $candles
             //->fillGaps()
-            // ->increaseTimespan($this->getCandlesTimespan())
             ->filterLastCandles($this->getNumberOfCandles());
     }
-
-    public function getCandlesTimespan(): int
-    {
-        // TODO: Implement getCandlesTimespan() method.
-    }
-
 
 }

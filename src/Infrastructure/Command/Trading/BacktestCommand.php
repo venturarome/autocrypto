@@ -12,7 +12,6 @@ use App\Domain\Model\Account\SpotBalanceCollection;
 use App\Domain\Model\Asset\SpotAsset;
 use App\Domain\Model\Trading\Candle;
 use App\Domain\Model\Trading\CandleCollection;
-use App\Domain\Model\Trading\CandleMap;
 use App\Domain\Model\Trading\Order;
 use App\Domain\Model\Trading\OrderCollection;
 use App\Domain\Repository\Asset\PairRepository;
@@ -133,10 +132,10 @@ class BacktestCommand extends Command
 
                 $buy_orders = $sell_orders = new OrderCollection();
                 if ($can_buy = $buy_strategy->checkCanBuy($account)) {
-                    $buy_orders = $buy_strategy->run($account, new CandleMap($timespan, [$candle_collection]));
+                    $buy_orders = $buy_strategy->run($account, $candle_collection);
                 }
                 if ($can_sell = $sell_strategy->checkCanSell($account)) {
-                    $sell_orders = $sell_strategy->run($account, new CandleMap($timespan, [$candle_collection]));
+                    $sell_orders = $sell_strategy->run($account, $candle_collection);
                 }
 
                 if (!$can_buy && !$can_sell) {

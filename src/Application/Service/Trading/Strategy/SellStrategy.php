@@ -3,7 +3,7 @@
 namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
-use App\Domain\Model\Trading\CandleMap;
+use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\OrderCollection;
 
 abstract class SellStrategy extends Strategy
@@ -14,9 +14,7 @@ abstract class SellStrategy extends Strategy
 
     abstract public function getNumberOfCandles(): int;
 
-    abstract public function getCandlesTimespan(): int;
-
     abstract public function checkCanSell(Account $account): bool;
 
-    abstract public function run(Account $account, CandleMap $candle_map): OrderCollection;
+    abstract public function run(Account $account, CandleCollection $candles): OrderCollection; // TODO hacer que el return sea ?Order
 }

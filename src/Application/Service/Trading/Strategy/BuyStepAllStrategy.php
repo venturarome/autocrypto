@@ -5,7 +5,7 @@ namespace App\Application\Service\Trading\Strategy;
 use App\Domain\Model\Account\Account;
 use App\Domain\Model\Account\SpotBalance;
 use App\Domain\Model\Trading\Candle;
-use App\Domain\Model\Trading\CandleMap;
+use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
 use App\Domain\Model\Trading\OrderCollection;
 
@@ -31,33 +31,26 @@ class BuyStepAllStrategy extends BuyStrategy
         return 5;
     }
 
-//    public function getCandlesTimespan(): int
-//    {
-//        return 5;
-//    }
-
     public function checkCanBuy(Account $account): bool
     {
         return ($this->balance_eur = $account->getSpotBalances()->findOneWithAssetSymbol('EUR'))
             && $this->balance_eur->getAmount() - self::SAFETY_MARGIN > $this->balance_eur->getMinChange();
     }
 
-    public function run(Account $account, CandleMap $candle_map): OrderCollection
+    public function run(Account $account, CandleCollection $candles): OrderCollection
     {
         $orders = new OrderCollection();
 
-        if($candle_map->count() === 0) {
+        if($candles->count() === 0) {
             return $orders;
         }
 
-//        $candle_map = $this->curateData($candle_map);
+//        $candles = $this->curateData($candles);
 
-        $highest_performance_candle_collection = $candle_map->selectHighestPerformant();
-
-        $performance = $highest_performance_candle_collection->getPerformance();
+        $performance = $candles->getPerformance();
         if ($performance->getPercentageReturn() > self::MINIMUM_RETURN) {
             /** @var Candle $last_candle */
-            $price = $highest_performance_candle_collection->getLastPrice();
+            $price = $candles->getLastPrice();
             $base_amount = ($this->balance_eur->getAmount() - self::SAFETY_MARGIN) / $price;
             $orders->add(Order::createMarketBuy(
                 $account,
@@ -68,19 +61,11 @@ class BuyStepAllStrategy extends BuyStrategy
         return $orders;
     }
 
-    public function curateData(CandleMap $candle_map): CandleMap
+    public function curateData(CandleCollection $candles): CandleCollection
     {
-        return $candle_map
+        return $candles
             //->fillGaps()
-            // ->increaseTimespan($this->getCandlesTimespan())
             ->filterLastCandles($this->getNumberOfCandles());
     }
-
-
-    public function getCandlesTimespan(): int
-    {
-        // TODO: Implement getCandlesTimespan() method.
-    }
-
 
 }

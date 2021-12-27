@@ -3,7 +3,7 @@
 namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
-use App\Domain\Model\Trading\CandleMap;
+use App\Domain\Model\Trading\CandleCollection;
 
 abstract class Strategy
 {
@@ -22,8 +22,5 @@ abstract class Strategy
 
     abstract public function getNumberOfCandles(): int;
 
-    // TODO a lo mejor no hace falta.
-    abstract public function getCandlesTimespan(): int;
-
-    abstract public function run(Account $account, CandleMap $candle_map);
+    abstract public function run(Account $account, CandleCollection $candles);
 }
