@@ -41,9 +41,9 @@ class SellNoLossesAllStrategy extends SellStrategy
         /** @var SpotBalance $base_balance */
         $base_balance = $account->getBalanceOf($base);
 
-        if ($candles->getPerformance()->getPercentageReturn() > self::MAXIMUM_RETURN    // Performance still good AND
+        if ($candles->getPerformance()->getPercentageReturn() > self::MAXIMUM_RETURN    // Performance still good
             &&                                                                          // and
-            $candles->getLastPrice() > 0.97 * $base_balance->getAveragePrice()          // Price over 97% of avg. purchase price
+            $candles->getLastPrice() > 0.98 * $base_balance->getAveragePrice()          // Price over 98% of avg. purchase price
         ) {
             return null;
         }
