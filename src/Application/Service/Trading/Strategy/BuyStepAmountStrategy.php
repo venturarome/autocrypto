@@ -43,13 +43,12 @@ class BuyStepAmountStrategy extends BuyStrategy
             return null;
         }
 
-        $owned_crypto_asset_symbols = $account->getSpotBalances()->filterCrypto()->getAssets()->getSymbolsArray();
-
         $candles = $this->curateData($candles);
 
-        $quote = $candles->getPair()->getQuote();
-        if ($candles->getPerformance()->getReturn() < self::MINIMUM_RETURN              // poor performance
-            || in_array($quote->getSymbol(), $owned_crypto_asset_symbols, true)    // or already has a position
+        $quote = $candles->getQuote();
+        if ($account->hasBalanceOf($quote)                                  // already has a position
+            ||                                                              // or
+            $candles->getPerformance()->getReturn() < self::MINIMUM_RETURN  // poor performance
         ) {
             return null;
         }
@@ -67,7 +66,6 @@ class BuyStepAmountStrategy extends BuyStrategy
     public function curateData(CandleCollection $candles): CandleCollection
     {
         return $candles
-            //->fillGaps()
             ->filterLastCandles($this->getNumberOfCandles());
     }
 

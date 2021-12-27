@@ -2,6 +2,7 @@
 
 namespace App\Domain\Model\Trading;
 
+use App\Domain\Model\Asset\Asset;
 use App\Domain\Model\Asset\Pair;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -50,6 +51,16 @@ class CandleCollection extends ArrayCollection
         return $this->pair;
     }
 
+    public function getBase(): Asset
+    {
+        return $this->pair->getBase();
+    }
+
+    public function getQuote(): Asset
+    {
+        return $this->pair->getQuote();
+    }
+
     public function getTimespan(): int
     {
         return $this->timespan;
@@ -80,24 +91,6 @@ class CandleCollection extends ArrayCollection
             $next = $iterator->current();
         }
         return $filled;
-    }
-
-    public function increaseTimespan(int $timespan): self
-    {
-        if ($timespan === $this->timespan) {
-            return $this;
-        }
-        if ($timespan < $this->timespan) {
-            throw new \LogicException("Can't increase timespan from {$this->timespan} to $timespan.");
-        }
-        if ($timespan % $this->timespan !== 0) {
-            throw new \LogicException("Timespan $timespan is not int-divisible by {$this->timespan}.");
-        }
-
-        // TODO Cuidado con:
-        //  - El ultimo Candle no está completo por lo general
-        //  - Puede que el nº de Candles no sea múltiple exacto, y hay que 'eliminar' los primeros.
-        return $this;
     }
 
     public function filterLastCandles(int $num): self

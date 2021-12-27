@@ -54,26 +54,6 @@ class CandleMap extends ArrayCollection
         return $performance_map;
     }
 
-    public function increaseTimespan(int $timespan): self
-    {
-        if ($timespan === $this->timespan) {
-            return $this;
-        }
-        if ($timespan < $this->timespan) {
-            throw new \LogicException("Can't increase timespan from {$this->timespan} to $timespan.");
-        }
-        if ($timespan % $this->timespan !== 0) {
-            throw new \LogicException("Timespan $timespan is not int-divisible by {$this->timespan}.");
-        }
-
-        $performance_map = new self($this->timespan);
-        foreach ($this as $candle_collection) {
-            /** @var CandleCollection $candle_collection */
-            $performance_map->add($candle_collection->increaseTimespan($timespan));
-        }
-        return $performance_map;
-    }
-
     public function filterLastCandles(int $num): self
     {
         $performance_map = new self($this->timespan);

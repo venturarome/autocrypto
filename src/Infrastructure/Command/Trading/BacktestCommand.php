@@ -130,22 +130,22 @@ class BacktestCommand extends Command
                 }
                 $candle_collection->removeElement($candle_collection->first());
 
-                $buy_orders = $sell_orders = new OrderCollection();
-                if ($can_buy = $buy_strategy->checkCanBuy($account)) {
-                    $buy_orders = $buy_strategy->run($account, $candle_collection);
+                $order = null;
+                if ($buy_strategy->checkCanBuy($account)) {
+                    $order = $buy_strategy->run($account, $candle_collection);
                 }
-                if ($can_sell = $sell_strategy->checkCanSell($account)) {
-                    $sell_orders = $sell_strategy->run($account, $candle_collection);
+                else if ($sell_strategy->checkCanSell($account)) {
+                    $order = $sell_strategy->run($account, $candle_collection);
                 }
-
-                if (!$can_buy && !$can_sell) {
+                else {
                     $date = date("Y-m-d H:i:s", $candle->getTimestamp());
                     $this->output->writeln(" On $date, you ran out of money!");
                     return Command::INVALID;
                 }
 
-                $orders = new OrderCollection(array_merge($buy_orders->toArray(), $sell_orders->toArray()));
-                $this->submitOrders($account, $orders, $candle);
+                if ($order) {
+                    $this->submitOrder($account, $order, $candle);
+                }
 
                 $current_year_month_str = (new \DateTime())->setTimestamp($candle->getTimestamp())->format('Ym');
                 if ($current_year_month_str !== $year_month_str) {
@@ -181,59 +181,51 @@ class BacktestCommand extends Command
         ];
     }
 
-    private function submitOrders(Account $account, OrderCollection $orders, Candle $last_candle): void
+    private function submitOrder(Account $account, ?Order $order, Candle $last_candle): void
     {
-        if ($orders->count() === 0) {
-            return;
-        }
-
         // So far, we assume 'market' orders and only one Asset.
         $balances = $account->getSpotBalances();
 
-        foreach ($orders as $order) {
-            /** @var Order $order */
+        $base = $order->getBaseAsset();
+        $quote = $order->getQuoteAsset();
+        $base_balance = $balances->findOfAsset($base);
+        $quote_balance = $balances->findOfAsset($quote);
+        $base_volume = $order->getVolume();
+        $quote_volume = $base_volume * $last_candle->getClose();
 
-            $base = $order->getBaseAsset();
-            $quote = $order->getQuoteAsset();
-            $base_balance = $balances->findOfAsset($base);
-            $quote_balance = $balances->findOfAsset($quote);
-            $base_volume = $order->getVolume();
-            $quote_volume = $base_volume * $last_candle->getClose();
+        if ($order->isBuy()) {
+            $quote_balance
+                ? $quote_balance->subtract($quote_volume)
+                : throw new \DomainException("Can't buy with Quote {$base->getSymbol()}, as it has no balance.");
 
-            if ($order->isBuy()) {
-                $quote_balance
-                    ? $quote_balance->subtract($quote_volume)
-                    : throw new \DomainException("Can't buy with Quote {$base->getSymbol()}, as it has no balance.");
+            $base_balance
+                ? $base_balance->add($base_volume)
+                : $balances->add(SpotBalance::create($base, $base_volume));
 
-                $base_balance
-                    ? $base_balance->add($base_volume)
-                    : $balances->add(SpotBalance::create($base, $base_volume));
+            $message = "     [BUY] $quote_volume {$quote->getSymbol()} ==> $base_volume {$base->getSymbol()}";
+            $this->output->writeln($message);
+            $this->writeToFile([$message]);
+        }
+        else {
+            $base_balance
+                ? $base_balance->subtract($base_volume)
+                : throw new \DomainException("Can't sell with Base {$base->getSymbol()}, as it has no balance.");
 
-                $message = "     [BUY] $quote_volume {$quote->getSymbol()} ==> $base_volume {$base->getSymbol()}";
-                $this->output->writeln($message);
-                $this->writeToFile([$message]);
-            }
-            else {
-                $base_balance
-                    ? $base_balance->subtract($base_volume)
-                    : throw new \DomainException("Can't sell with Base {$base->getSymbol()}, as it has no balance.");
+            $quote_balance
+                ? $quote_balance->add($quote_volume)
+                : $balances->add(SpotBalance::create($quote, $quote_volume));
 
-                $quote_balance
-                    ? $quote_balance->add($quote_volume)
-                    : $balances->add(SpotBalance::create($quote, $quote_volume));
+            $message = "     [SELL] $base_volume {$base->getSymbol()} ==> $quote_volume {$quote->getSymbol()}";
+            $this->output->writeln($message);
+            $this->writeToFile([$message]);
 
-                $message = "     [SELL] $base_volume {$base->getSymbol()} ==> $quote_volume {$quote->getSymbol()}";
-                $this->output->writeln($message);
-                $this->writeToFile([$message]);
+            $date = date("Y-m-d H:i:s", $last_candle->getTimestamp());
+            $amount_eur = $quote_balance->getAmount() + $last_candle->getClose() * $base_balance->getAmount();
+            $total_return = 100 * ($amount_eur/self::INITIAL_AMOUNT - 1);
+            $message = "       [SUMMARY] On $date, you have $amount_eur EUR ($total_return %)";
+            $this->output->writeln($message);
+            $this->writeToFile([$message]);
 
-                $date = date("Y-m-d H:i:s", $last_candle->getTimestamp());
-                $amount_eur = $quote_balance->getAmount() + $last_candle->getClose() * $base_balance->getAmount();
-                $total_return = 100 * ($amount_eur/self::INITIAL_AMOUNT - 1);
-                $message = "       [SUMMARY] On $date, you have $amount_eur EUR ($total_return %)";
-                $this->output->writeln($message);
-                $this->writeToFile([$message]);
-
-            }
         }
     }
 

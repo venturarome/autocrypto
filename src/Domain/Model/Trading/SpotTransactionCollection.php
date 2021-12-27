@@ -9,4 +9,9 @@ class SpotTransactionCollection extends TransactionCollection
     {
         return new FiscalResult($this->filterOfAssetSymbol($asset_symbol));
     }
+
+    public function getFiscalResult(): FiscalResult
+    {
+        return new FiscalResult($this);
+    }
 }

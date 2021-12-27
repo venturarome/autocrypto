@@ -148,7 +148,13 @@ class Account
 
     public function hasBalanceOf(Asset $asset): bool
     {
-        return (bool)$this->getSpotBalances()->findOfAsset($asset);
+        $b = $this->getBalanceOf($asset);
+        return $b && !$b->isZero();
+    }
+
+    public function getBalanceOf(Asset $asset): ?Balance
+    {
+        return $this->getSpotBalances()->findOfAsset($asset);
     }
 
     /** $price is how much Base can be bought with one Quote */

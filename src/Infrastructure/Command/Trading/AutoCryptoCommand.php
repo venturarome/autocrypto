@@ -10,7 +10,6 @@ use App\Application\Service\Trading\Strategy\StrategyFactory;
 use App\Domain\Model\Asset\Pair;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
-use App\Domain\Model\Trading\OrderCollection;
 use App\Domain\Repository\Account\AccountRepository;
 use App\Domain\Repository\Asset\PairRepository;
 use App\Domain\Repository\Asset\SpotAssetRepository;
@@ -81,13 +80,15 @@ class AutoCryptoCommand extends Command
                 $candles = $this->getRealTimeCandles($pair, 1);
 
                 $order = null;
-
                 if ($buy_strategy->checkCanBuy($account)) {
                     $order = $buy_strategy->run($account, $candles);
                 }
-
-                if (!$order && $sell_strategy->checkCanSell($account)) {
+                else if ($sell_strategy->checkCanSell($account)) {
                     $order = $sell_strategy->run($account, $candles);
+                }
+                else {
+                    // You ran out of money!
+                    return Command::FAILURE;
                 }
 
                 if ($account->canPlaceOrder($order, $candles->getLastPrice())) {

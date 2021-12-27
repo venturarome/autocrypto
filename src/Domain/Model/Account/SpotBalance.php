@@ -4,6 +4,7 @@ namespace App\Domain\Model\Account;
 
 use App\Domain\Model\Asset\Asset;
 use App\Domain\Model\Asset\SpotAsset;
+use App\Domain\Model\Trading\FiscalResult;
 use App\Domain\Model\Trading\SpotTransactionCollection;
 use Doctrine\Common\Collections\Collection;
 
@@ -12,6 +13,9 @@ class SpotBalance extends Balance
 {
     protected SpotAsset $spot_asset;
     protected Collection $transactions;
+
+    // Cache
+    private FiscalResult $fiscal_result;
 
     public static function create(SpotAsset $spot_asset, float $amount = 0): self
     {
@@ -33,5 +37,26 @@ class SpotBalance extends Balance
     public function getSpotAsset(): SpotAsset
     {
         return $this->spot_asset;
+    }
+
+    private function getTransactions(): SpotTransactionCollection
+    {
+        if (!$this->transactions instanceof SpotTransactionCollection) {
+            $this->transactions = new SpotTransactionCollection($this->transactions->toArray());
+        }
+        return $this->transactions;
+    }
+
+    private function getFiscalResult(): FiscalResult
+    {
+        if (!isset($this->fiscal_result)) {
+            $this->fiscal_result = $this->getTransactions()->getFiscalResult();
+        }
+        return $this->fiscal_result;
+    }
+
+    public function getAveragePrice(): float
+    {
+        return $this->getFiscalResult()->getAveragePrice();
     }
 }

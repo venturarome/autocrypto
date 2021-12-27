@@ -31,27 +31,28 @@ class SellStepAllStrategy extends SellStrategy
 
     public function run(Account $account, CandleCollection $candles): ?Order
     {
-        $crypto_balances = $account->getSpotBalances()->filterCrypto();
-        $owned_crypto_asset_symbols = $crypto_balances->getAssets()->getSymbolsArray();
-
-        $base = $candles->getPair()->getBase();
-        if ($candles->getPerformance()->getPercentageReturn() > self::MAXIMUM_RETURN
-            || !in_array($base->getSymbol(), $owned_crypto_asset_symbols, true)
-        ) {
+        if($candles->count() === 0) {
             return null;
         }
-        $base_amount = $crypto_balances->findOfAsset($base)->getAmount();
+        $candles = $this->curateData($candles);
 
-        return Order::createMarketSell($account, $candles->getPair(), $base_amount);
+        $base = $candles->getBase();
+        if (!$account->hasBalanceOf($base)) {
+            return null;
+        }
+        $base_balance = $account->getBalanceOf($base);
+
+        if ($candles->getPerformance()->getPercentageReturn() > self::MAXIMUM_RETURN) {
+            return null;
+        }
+
+        return Order::createMarketSell($account, $candles->getPair(), $base_balance->getAmount());
     }
 
-//    public function curateData(CandleCollection $candles): CandleCollection
-//    {
-//        return $candles
-//            ->fillGaps()
-//            ->filterLastCandles($this->getNumberOfCandles());
-//    }
-
-
+    public function curateData(CandleCollection $candles): CandleCollection
+    {
+        return $candles
+            ->filterLastCandles($this->getNumberOfCandles());
+    }
 
 }

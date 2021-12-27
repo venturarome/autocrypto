@@ -31,6 +31,7 @@ class BuyStepAllStrategy extends BuyStrategy
 
     public function checkCanBuy(Account $account): bool
     {
+
         return ($this->balance_eur = $account->getSpotBalances()->findOneWithAssetSymbol('EUR'))
             && $this->balance_eur->getAmount() - self::SAFETY_MARGIN > $this->balance_eur->getMinChange();
     }
@@ -40,11 +41,9 @@ class BuyStepAllStrategy extends BuyStrategy
         if($candles->count() === 0) {
             return null;
         }
-
-//        $candles = $this->curateData($candles);
+        $candles = $this->curateData($candles);
 
         $performance = $candles->getPerformance();
-
         if ($performance->getPercentageReturn() <= self::MINIMUM_RETURN) {
             return null;
         }
@@ -61,7 +60,6 @@ class BuyStepAllStrategy extends BuyStrategy
     public function curateData(CandleCollection $candles): CandleCollection
     {
         return $candles
-            //->fillGaps()
             ->filterLastCandles($this->getNumberOfCandles());
     }
 
