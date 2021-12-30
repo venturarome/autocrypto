@@ -7,6 +7,8 @@ use App\Application\Service\Account\UpdateAccountBalancesService;
 use App\Application\Service\Trading\Strategy\BuyStrategy;
 use App\Application\Service\Trading\Strategy\SellStrategy;
 use App\Application\Service\Trading\Strategy\StrategyFactory;
+use App\Application\Service\Trading\UpdateTransactionsRequest;
+use App\Application\Service\Trading\UpdateTransactionsService;
 use App\Domain\Model\Asset\Pair;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
@@ -25,6 +27,7 @@ class AutoCryptoCommand extends Command
     private StrategyFactory $strategy_factory;
     private SpotAssetRepository $spot_asset_repo;
     private UpdateAccountBalancesService $update_balances_service;
+    private UpdateTransactionsService $update_transactions_service;
     private PairRepository $pair_repo;
     private KrakenApiClient $kraken_api_client;
 
@@ -33,6 +36,7 @@ class AutoCryptoCommand extends Command
         StrategyFactory $strategy_factory,
         SpotAssetRepository $spot_asset_repo,
         UpdateAccountBalancesService $update_balances_service,
+        UpdateTransactionsService $update_transactions_service,
         PairRepository $pair_repo,
         KrakenApiClient $kraken_api_client,
     ) {
@@ -40,6 +44,7 @@ class AutoCryptoCommand extends Command
         $this->strategy_factory = $strategy_factory;
         $this->spot_asset_repo = $spot_asset_repo;
         $this->update_balances_service = $update_balances_service;
+        $this->update_transactions_service = $update_transactions_service;
         $this->pair_repo = $pair_repo;
         $this->kraken_api_client = $kraken_api_client;
         parent::__construct();
@@ -64,12 +69,14 @@ class AutoCryptoCommand extends Command
         $reference = $input->getArgument('reference');
         $account = $this->account_repo->findByReferenceOrFail($reference);
         $this->kraken_api_client->configureKeys(...$account->getKeys());
+
+        $this->update_balances_service->execute(new UpdateAccountBalancesRequest($reference));
+        $this->update_transactions_service->execute(new UpdateTransactionsRequest($reference));
+
         /** @var BuyStrategy $buy_strategy */
         /** @var SellStrategy $sell_strategy */
         $buy_strategy = $this->strategy_factory->createByName($account->getBuyStrategyName());
         $sell_strategy = $this->strategy_factory->createByName($account->getSellStrategyName());
-
-        $this->update_balances_service->execute(new UpdateAccountBalancesRequest($reference));
 
         $quote = $this->spot_asset_repo->findBySymbolOrFail($account->getQuoteSymbol());
         $pairs = $this->pair_repo->findByQuote($quote);
@@ -91,9 +98,10 @@ class AutoCryptoCommand extends Command
                     return Command::FAILURE;
                 }
 
-                if ($account->canPlaceOrder($order, $candles->getLastPrice())) {
+                if ($order && $account->canPlaceOrder($order, $candles->getLastPrice())) {
                     $this->placeOrder($order);
                     $this->update_balances_service->execute(new UpdateAccountBalancesRequest($reference));
+                    $this->update_transactions_service->execute(new UpdateTransactionsRequest($reference));
                 }
             }
         }

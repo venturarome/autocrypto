@@ -53,13 +53,13 @@ class ParseCandleDataCommand extends Command
         $count = 0;
         $start = microtime(true);
         while ($candle = fgetcsv($file, 0, ',')) {
-            $timestamp = (int)$candle[0];
+            $timestamp = (int)$candle[0]/1000;    // Kraken: /1;    Binance: /1000
             $open = $candle[1];
             $high = $candle[2];
             $low = $candle[3];
             $close = $candle[4];
             $volume = $candle[5];
-            $trades = (int)$candle[6];
+            $trades = (int)$candle[8];  // Kraken: [6];    Binance: [8]
 
             $this->addInsertRow(
                 $pair_id,

@@ -2,12 +2,10 @@
 
 namespace Domain\Model\Trading;
 
-use App\Domain\Model\Asset\Pair;
-use App\Domain\Model\Trading\Candle;
-use App\Domain\Model\Trading\CandleCollection;
-use PHPUnit\Framework\TestCase;
+use Mockery\Adapter\Phpunit\MockeryTestCase;
 
-class CandleCollectionTest extends TestCase
+
+class CandleCollectionTest extends MockeryTestCase
 {
     public function testCreationFailsIfCandlesAreOfDifferentPair(): void
     {

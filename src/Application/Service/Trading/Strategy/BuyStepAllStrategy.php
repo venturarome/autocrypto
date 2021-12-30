@@ -16,7 +16,7 @@ class BuyStepAllStrategy extends BuyStrategy
 
 
     // TODO parametrizar
-    private const MINIMUM_RETURN = 2;
+    private const MINIMUM_RETURN = 3;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
     public function __construct() {
@@ -26,7 +26,7 @@ class BuyStepAllStrategy extends BuyStrategy
 
     public function getNumberOfCandles(): int
     {
-        return 5;
+        return 10;
     }
 
     public function checkCanBuy(Account $account): bool

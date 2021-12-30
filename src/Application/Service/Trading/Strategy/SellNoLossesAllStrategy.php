@@ -12,7 +12,7 @@ class SellNoLossesAllStrategy extends SellStrategy
     public const NAME = 'sell.no_losses.all';
 
     // TODO parametrizar
-    private const MAXIMUM_RETURN = -0.2;
+    private const MINIMUN_RETURN = -1;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
     public function __construct() {
@@ -22,7 +22,7 @@ class SellNoLossesAllStrategy extends SellStrategy
 
     public function getNumberOfCandles(): int
     {
-        return 5;
+        return 10;
     }
 
     public function checkCanSell(Account $account): bool
@@ -41,9 +41,9 @@ class SellNoLossesAllStrategy extends SellStrategy
         /** @var SpotBalance $base_balance */
         $base_balance = $account->getBalanceOf($base);
 
-        if ($candles->getPerformance()->getPercentageReturn() > self::MAXIMUM_RETURN    // Performance still good
-            &&                                                                          // and
-            $candles->getLastPrice() > 0.98 * $base_balance->getAveragePrice()          // Price over 98% of avg. purchase price
+        if ($candles->getPercentageReturn() > self::MINIMUN_RETURN                  // Performance still good
+            &&                                                                      // and
+            $candles->getLastPrice() > 0.98 * $base_balance->getAveragePrice()      // Price over 98% of avg. purchase price
         ) {
             return null;
         }

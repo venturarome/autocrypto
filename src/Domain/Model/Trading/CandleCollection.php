@@ -120,6 +120,11 @@ class CandleCollection extends ArrayCollection
         return Performance::fromCandleCollection($this);
     }
 
+    public function getPercentageReturn(): float
+    {
+        return $this->getPerformance()->getPercentageReturn();
+    }
+
     public function getLastPrice(): float
     {
         return $this->last()->getClose();
