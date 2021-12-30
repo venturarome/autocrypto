@@ -18,7 +18,7 @@ class BuyMomentumAllStrategy extends BuyStrategy
 
 
     // TODO parametrizar
-    private const MINIMUM_RETURN = 4;
+    private const MINIMUM_RETURN = 2;
     private const BUY_AMOUNT_QUOTE = 20;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
@@ -54,6 +54,8 @@ class BuyMomentumAllStrategy extends BuyStrategy
         if ($current_momentum <= 0                                          // price going down
             ||                                                              // or
             $current_momentum < self::MOMENTUM_RATIO * $average_momentum    // low momentum ratio
+            ||                                                              // or
+            $candles->getPercentageReturn() < self::MINIMUM_RETURN          // price not going up enough
         ) {
             return null;
         }
