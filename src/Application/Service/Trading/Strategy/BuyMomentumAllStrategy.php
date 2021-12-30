@@ -40,7 +40,10 @@ class BuyMomentumAllStrategy extends BuyStrategy
 
     public function run(Account $account, CandleCollection $candles): ?Order
     {
-        if($candles->count() === 0) {
+        if ($candles->count() === 0) {
+            return null;
+        }
+        if ($account->hasBalanceOf($candles->getBase())) {                  // already has a position
             return null;
         }
 
@@ -48,12 +51,9 @@ class BuyMomentumAllStrategy extends BuyStrategy
         $candles = $this->curateData($candles);
         $current_momentum = $candles->getAverageClose() - $candles->getAverageOpen();
 
-        $quote = $candles->getQuote();
-        if ($current_momentum < 0                                           // price going down
+        if ($current_momentum <= 0                                          // price going down
             ||                                                              // or
             $current_momentum < self::MOMENTUM_RATIO * $average_momentum    // low momentum ratio
-            ||                                                              // or
-            $account->hasBalanceOf($quote)                                  // already has a position
         ) {
             return null;
         }

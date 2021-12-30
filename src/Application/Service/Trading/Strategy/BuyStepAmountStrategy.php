@@ -42,14 +42,13 @@ class BuyStepAmountStrategy extends BuyStrategy
         if($candles->count() === 0) {
             return null;
         }
+        if ($account->hasBalanceOf($candles->getBase())) {                      // already has a position
+            return null;
+        }
 
         $candles = $this->curateData($candles);
 
-        $quote = $candles->getQuote();
-        if ($account->hasBalanceOf($quote)                                  // already has a position
-            ||                                                              // or
-            $candles->getPerformance()->getReturn() < self::MINIMUM_RETURN  // poor performance
-        ) {
+        if ($candles->getPerformance()->getReturn() < self::MINIMUM_RETURN) {   // poor performance
             return null;
         }
 
