@@ -21,12 +21,13 @@ use App\Domain\Repository\Trading\CandleRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class BacktestMultipleCommand extends Command
 {
     private const INITIAL_AMOUNT = 100;
-    private const MAX_RESULTS = 50;
+    private const MAX_RESULTS = 80;
 
     private SpotAssetRepository $spot_asset_repo;
     private CandleRepository $candle_repo;
@@ -36,6 +37,8 @@ class BacktestMultipleCommand extends Command
 
     // Cache
     private OutputInterface $output;
+    private ConsoleSectionOutput $output_section_date;
+    private ConsoleSectionOutput $output_section_order;
     private \DateTime $date_from;
     private \DateTime $date_to;
     private int $timespan;
@@ -75,6 +78,9 @@ class BacktestMultipleCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->output = $output;
+        $this->output_section_date = $output->section();
+        $this->output_section_order = $output->section();
+
         $this->output->writeln([
             'Backtesting Strategies',
             '======================',
@@ -131,9 +137,11 @@ class BacktestMultipleCommand extends Command
         }
 
         $candles = $this->getCandleGenerator();
-        $min_num_candles = max($buy_strategy->getNumberOfCandles(), $sell_strategy->getNumberOfCandles());
+        $min_num_candles = 720;//max($buy_strategy->getNumberOfCandles(), $sell_strategy->getNumberOfCandles());
         foreach ($candles as $candle) {
             /** @var Candle $candle */
+
+            $this->output_section_date->overwrite(date('Y-m-d H:i', $candle->getTimestamp()));
 
             $pair_symbol = $candle->getPairSymbol();
 
@@ -154,7 +162,7 @@ class BacktestMultipleCommand extends Command
             }
             else {
                 $date = date("Y-m-d H:i:s", $candle->getTimestamp());
-                $this->output->writeln(" On $date, you ran out of money!");
+                $this->output_section_order->overwrite(" On $date, you ran out of money!");
                 return Command::INVALID;
             }
 
@@ -185,17 +193,18 @@ class BacktestMultipleCommand extends Command
 
         while (count($candle_blocks) > 0) {
             foreach ($this->pairs as $pair) {
-                if (count($candle_blocks[$pair->getSymbol()]) === 0) {
-                    $candle_blocks[$pair->getSymbol()] = $this->candle_repo->findForPairInRange($pair, $this->timespan, $this->date_from, $this->date_to, $first_results[$pair->getSymbol()], self::MAX_RESULTS)->fillGaps();
-                    $first_results[$pair->getSymbol()] += self::MAX_RESULTS;
-                    if (count($candle_blocks[$pair->getSymbol()]) === 0) {
+                $pair_symbol = $pair->getSymbol();
+                if (count($candle_blocks[$pair_symbol]) === 0) {
+                    $candle_blocks[$pair_symbol] = $this->candle_repo->findForPairInRange($pair, $this->timespan, $this->date_from, $this->date_to, $first_results[$pair->getSymbol()], self::MAX_RESULTS)->fillGaps();
+                    $first_results[$pair_symbol] += self::MAX_RESULTS;
+                    if (count($candle_blocks[$pair_symbol]) === 0) {
                         // No more candles for that pair.
-                        unset($candle_blocks[$pair->getSymbol()]);
+                        unset($candle_blocks[$pair_symbol]);
                         continue;
                     }
                 }
-                $candle = clone $candle_blocks[$pair->getSymbol()]->first();
-                $candle_blocks[$pair->getSymbol()]->removeElement($candle_blocks[$pair->getSymbol()]->first());
+                $candle = clone $candle_blocks[$pair_symbol]->first();
+                $candle_blocks[$pair_symbol]->removeElement($candle_blocks[$pair_symbol]->first());
                 yield $candle;
             }
         }
@@ -225,7 +234,7 @@ class BacktestMultipleCommand extends Command
                 : $balances->add(SpotBalance::create($base, $base_volume));
 
             $message = "     [BUY] [$date] $quote_volume {$quote->getSymbol()} ==> $base_volume {$base->getSymbol()}";
-            $this->output->writeln($message);
+            $this->output_section_order->overwrite($message);
             $this->writeToFile([$message]);
         }
         else {
@@ -238,13 +247,13 @@ class BacktestMultipleCommand extends Command
                 : $balances->add(SpotBalance::create($quote, $quote_volume));
 
             $message = "     [SELL] [$date] $base_volume {$base->getSymbol()} ==> $quote_volume {$quote->getSymbol()}";
-            $this->output->writeln($message);
+            $this->output_section_order->overwrite($message);
             $this->writeToFile([$message]);
 
             $amount_eur = $quote_balance->getAmount() + $last_candle->getClose() * $base_balance->getAmount();
             $total_return = 100 * ($amount_eur/self::INITIAL_AMOUNT - 1);
             $message = "       [SUMMARY] On $date, you have $amount_eur EUR ($total_return %)";
-            $this->output->writeln($message);
+            //$this->output_section_order->writeln($message);
             $this->writeToFile([$message]);
 
         }

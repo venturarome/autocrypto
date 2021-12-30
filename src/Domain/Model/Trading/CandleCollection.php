@@ -129,4 +129,41 @@ class CandleCollection extends ArrayCollection
     {
         return $this->last()->getClose();
     }
+
+    public function getAverageOpen(): float
+    {
+        $sum = array_reduce($this->toArray(),static function (float $sum, Candle $c) { return $sum + $c->getOpen(); }, 0);
+        return $sum / $this->count();
+    }
+
+    public function getAverageHigh(): float
+    {
+        $sum = array_reduce($this->toArray(),static function (float $sum, Candle $c) { return $sum + $c->getHigh(); }, 0);
+        return $sum / $this->count();
+    }
+
+    public function getAverageLow(): float
+    {
+        $sum = array_reduce($this->toArray(),static function (float $sum, Candle $c) { return $sum + $c->getLow(); }, 0);
+        return $sum / $this->count();
+    }
+
+    public function getAverageClose(): float
+    {
+        $sum = array_reduce($this->toArray(),static function (float $sum, Candle $c) { return $sum + $c->getClose(); }, 0);
+        return $sum / $this->count();
+    }
+
+    public function getAverageVolume(): float
+    {
+        $sum = array_reduce($this->toArray(),static function (float $sum, Candle $c) { return $sum + $c->getVolume(); }, 0);
+        return $sum / $this->count();
+    }
+
+    public function getLastTimestamp(): ?int
+    {
+        /** @var Candle $last_candle */
+        $last_candle = $this->last();
+        return $last_candle?->getTimestamp();
+    }
 }

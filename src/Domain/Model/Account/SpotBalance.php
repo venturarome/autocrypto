@@ -5,6 +5,7 @@ namespace App\Domain\Model\Account;
 use App\Domain\Model\Asset\Asset;
 use App\Domain\Model\Asset\SpotAsset;
 use App\Domain\Model\Trading\FiscalResult;
+use App\Domain\Model\Trading\SpotTransaction;
 use App\Domain\Model\Trading\SpotTransactionCollection;
 use Doctrine\Common\Collections\Collection;
 
@@ -58,5 +59,13 @@ class SpotBalance extends Balance
     public function getAveragePrice(): float
     {
         return $this->getFiscalResult()->getAveragePrice();
+    }
+
+    public function getLastTransactionTimestamp(): ?int
+    {
+        /* @var SpotTransaction $last_transaction */
+        $last_transaction = $this->transactions->last();
+
+        return $last_transaction?->getTimestamp();
     }
 }
