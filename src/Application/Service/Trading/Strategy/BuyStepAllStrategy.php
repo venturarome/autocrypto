@@ -3,16 +3,12 @@
 namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
-use App\Domain\Model\Account\SpotBalance;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
 
 class BuyStepAllStrategy extends BuyStrategy
 {
     public const NAME = 'buy.step.all';
-    protected const SAFETY_MARGIN = 10; // Quote
-
-    private ?SpotBalance $balance_eur;
 
 
     // TODO parametrizar
@@ -29,15 +25,12 @@ class BuyStepAllStrategy extends BuyStrategy
         return 10;
     }
 
-    public function checkCanBuy(Account $account): bool
-    {
-
-        return ($this->balance_eur = $account->getSpotBalances()->findOneWithAssetSymbol('EUR'))
-            && $this->balance_eur->getAmount() - self::SAFETY_MARGIN > $this->balance_eur->getMinChange();
-    }
-
     public function run(Account $account, CandleCollection $candles): ?Order
     {
+        if (!$account->canBuy()) {
+            return null;
+        }
+
         if($candles->count() === 0) {
             return null;
         }
@@ -48,11 +41,13 @@ class BuyStepAllStrategy extends BuyStrategy
             return null;
         }
 
+        $quote_balance = $account->getSpotBalances()->findOneWithAssetSymbolOrFail($account->getQuoteSymbol());
+        $available_quote_amount = $quote_balance->getAmount() - $account->getSafetyAmount();
         $price = $candles->getLastPrice();
-        $base_amount = ($this->balance_eur->getAmount() - self::SAFETY_MARGIN) / $price;
+        $base_amount = $available_quote_amount / $price;
         return Order::createMarketBuy(
             $account,
-            $performance->getPair(),
+            $candles->getPair(),
             $base_amount,
         );
     }

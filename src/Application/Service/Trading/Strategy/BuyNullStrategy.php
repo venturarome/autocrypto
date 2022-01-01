@@ -21,11 +21,6 @@ class BuyNullStrategy extends BuyStrategy
         return 0;
     }
 
-    public function checkCanBuy(Account $account): bool
-    {
-        return true;
-    }
-
     public function run(Account $account, CandleCollection $candles): ?Order
     {
         return null;

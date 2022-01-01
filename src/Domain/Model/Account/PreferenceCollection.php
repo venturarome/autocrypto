@@ -6,7 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 class PreferenceCollection extends ArrayCollection
 {
-    public function find(string $name): string
+    public function find(string $name): ?string
     {
         foreach ($this as $preference) {
             /** @var Preference $preference */
@@ -14,5 +14,6 @@ class PreferenceCollection extends ArrayCollection
                 return $preference->getValue();
             }
         }
+        return null;
     }
 }

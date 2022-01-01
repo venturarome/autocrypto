@@ -124,23 +124,21 @@ class BacktestCommand extends Command
             foreach ($candle_block as $candle) {
                 /** @var Candle $candle */
 
+                if (!$account->canTrade()) {
+                    $date = date("Y-m-d H:i:s", $candle->getTimestamp());
+                    $this->output->writeln(" On $date, you ran out of money!");
+                    return Command::INVALID;
+                }
+
                 $candle_collection->add($candle);
                 if ($candle_collection->count() <= max($buy_strategy->getNumberOfCandles(), $sell_strategy->getNumberOfCandles())) {
                     continue;
                 }
                 $candle_collection->removeElement($candle_collection->first());
 
-                $order = null;
-                if ($buy_strategy->checkCanBuy($account)) {
-                    $order = $buy_strategy->run($account, $candle_collection);
-                }
-                else if ($sell_strategy->checkCanSell($account)) {
+                $order = $buy_strategy->run($account, $candle_collection);
+                if (!$order) {
                     $order = $sell_strategy->run($account, $candle_collection);
-                }
-                else {
-                    $date = date("Y-m-d H:i:s", $candle->getTimestamp());
-                    $this->output->writeln(" On $date, you ran out of money!");
-                    return Command::INVALID;
                 }
 
                 if ($order) {

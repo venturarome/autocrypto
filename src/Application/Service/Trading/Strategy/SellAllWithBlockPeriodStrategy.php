@@ -25,13 +25,12 @@ class SellAllWithBlockPeriodStrategy extends SellStrategy
         return 10;
     }
 
-    public function checkCanSell(Account $account): bool
-    {
-        return $account->getSpotBalances()->filterCrypto()->filterNonZero()->count() > 0;
-    }
-
     public function run(Account $account, CandleCollection $candles): ?Order
     {
+        if (!$account->canSell()) {
+            return null;
+        }
+
         $base = $candles->getBase();
         if (!$account->hasBalanceOf($base)) {
             return null;

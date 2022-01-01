@@ -12,6 +12,7 @@ class StrategyFactory
             BuyStepAmountStrategy::NAME => new BuyStepAmountStrategy(),
             BuyStepAllStrategy::NAME => new BuyStepAllStrategy(),
             BuyMomentumAllStrategy::NAME => new BuyMomentumAllStrategy(),
+            BuyMomentumAmountStrategy::NAME => new BuyMomentumAmountStrategy(),
             BuyNullStrategy::NAME => new BuyNullStrategy(),
             SellStepAllStrategy::NAME => new SellStepAllStrategy(),
             SellNoLossesAllStrategy::NAME => new SellNoLossesAllStrategy(),

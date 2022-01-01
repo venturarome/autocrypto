@@ -21,11 +21,6 @@ class SellNullStrategy extends SellStrategy
         return 0;
     }
 
-    public function checkCanSell(Account $account): bool
-    {
-        return true;
-    }
-
     public function run(Account $account, CandleCollection $candles): ?Order
     {
         return null;

@@ -14,7 +14,5 @@ abstract class BuyStrategy extends Strategy
 
     abstract public function getNumberOfCandles(): int;
 
-    abstract public function checkCanBuy(Account $account): bool;
-
     abstract public function run(Account $account, CandleCollection $candles): ?Order;
 }

@@ -9,12 +9,10 @@ use App\Domain\Factory\Account\AccountFactory;
 use App\Domain\Model\Account\Account;
 use App\Domain\Model\Account\SpotBalance;
 use App\Domain\Model\Account\SpotBalanceCollection;
-use App\Domain\Model\Asset\Pair;
-use App\Domain\Model\Asset\SpotAsset;
 use App\Domain\Model\Trading\Candle;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
-use App\Domain\Model\Trading\OrderCollection;
+use App\Domain\Model\Trading\SpotTransaction;
 use App\Domain\Repository\Asset\PairRepository;
 use App\Domain\Repository\Asset\SpotAssetRepository;
 use App\Domain\Repository\Trading\CandleRepository;
@@ -104,9 +102,7 @@ class BacktestMultipleCommand extends Command
         $pair_repo = $this->pair_repo;
         $this->pairs = array_map(
             static function (string $base_asset_symbol) use ($pair_repo, $quote_asset_symbol) {
-
-                $pair_symbol = $base_asset_symbol . $quote_asset_symbol;
-                return $pair_repo->findBySymbolOrFail($pair_symbol);
+                return $pair_repo->findBySymbolOrFail($base_asset_symbol . $quote_asset_symbol);
             },
             $base_asset_symbols
         );
@@ -137,10 +133,16 @@ class BacktestMultipleCommand extends Command
         }
 
         $candles = $this->getCandleGenerator();
-        $min_num_candles = 720;//max($buy_strategy->getNumberOfCandles(), $sell_strategy->getNumberOfCandles());
+        $min_num_candles = 720; // 12 h
         foreach ($candles as $candle) {
             /** @var Candle $candle */
 
+            if (!$account->canTrade()) {
+                $date = date("Y-m-d H:i:s", $candle->getTimestamp());
+                $this->output_section_order->overwrite(" On $date, you ran out of money!");
+                return Command::INVALID;
+            }
+            
             $this->output_section_date->overwrite(date('Y-m-d H:i', $candle->getTimestamp()));
 
             $pair_symbol = $candle->getPairSymbol();
@@ -153,17 +155,9 @@ class BacktestMultipleCommand extends Command
 
             $candle_collection = $this->candle_collections[$pair_symbol];
 
-            $order = null;
-            if ($buy_strategy->checkCanBuy($account)) {
-                $order = $buy_strategy->run($account, $candle_collection);
-            }
-            else if ($sell_strategy->checkCanSell($account)) {
+            $order = $buy_strategy->run($account, $candle_collection);
+            if (!$order) {
                 $order = $sell_strategy->run($account, $candle_collection);
-            }
-            else {
-                $date = date("Y-m-d H:i:s", $candle->getTimestamp());
-                $this->output_section_order->overwrite(" On $date, you ran out of money!");
-                return Command::INVALID;
             }
 
             if ($order) {
@@ -212,11 +206,17 @@ class BacktestMultipleCommand extends Command
 
     private function submitOrder(Account $account, ?Order $order, Candle $last_candle): void
     {
+        if (!$order) {
+            return;
+        }
+
         // So far, we assume 'market' orders and only one Asset.
         $balances = $account->getSpotBalances();
 
         $base = $order->getBaseAsset();
         $quote = $order->getQuoteAsset();
+        /** @var SpotBalance $base_balance */
+        /** @var SpotBalance $quote_balance */
         $base_balance = $balances->findOfAsset($base);
         $quote_balance = $balances->findOfAsset($quote);
         $base_volume = $order->getVolume();
@@ -225,26 +225,80 @@ class BacktestMultipleCommand extends Command
         $date = date("Y-m-d H:i:s", $last_candle->getTimestamp());
 
         if ($order->isBuy()) {
-            $quote_balance
-                ? $quote_balance->subtract($quote_volume)
-                : throw new \DomainException("Can't buy with Quote {$base->getSymbol()}, as it has no balance.");
+            if ($quote_balance) {
+                $quote_balance->subtract($quote_volume);
+                $transaction = new SpotTransaction(
+                    'T_' . time() . '_' . $order->getPairSymbol(),
+                    $order->getTimestamp(),
+                    $order->getReference(),
+                    microtime(true),
+                    -$quote_volume,
+                    0,
+                    $quote_balance
+                );
+                $quote_balance->addTransaction($transaction);
+            }
+            else {
+                throw new \DomainException("Can't buy with Quote {$base->getSymbol()}, as it has no balance.");
+            }
 
-            $base_balance
-                ? $base_balance->add($base_volume)
-                : $balances->add(SpotBalance::create($base, $base_volume));
+            if ($base_balance) {
+                $base_balance->add($base_volume);
+            }
+            else {
+                $base_balance = SpotBalance::create($base, $base_volume);
+                $balances->add($base_balance);
+            }
+            $transaction = new SpotTransaction(
+                'T_' . time() . '_' . $order->getPairSymbol(),
+                $order->getTimestamp(),
+                $order->getReference(),
+                microtime(true),
+                $base_volume,
+                0,
+                $base_balance
+            );
+            $base_balance->addTransaction($transaction);
 
             $message = "     [BUY] [$date] $quote_volume {$quote->getSymbol()} ==> $base_volume {$base->getSymbol()}";
             $this->output_section_order->overwrite($message);
             $this->writeToFile([$message]);
         }
-        else {
-            $base_balance
-                ? $base_balance->subtract($base_volume)
-                : throw new \DomainException("Can't sell with Base {$base->getSymbol()}, as it has no balance.");
+        else {  // is sell
+            if ($base_balance) {
+                $base_balance->subtract($base_volume);
+                $transaction = new SpotTransaction(
+                    'T_' . time() . '_' . $order->getPairSymbol(),
+                    $order->getTimestamp(),
+                    $order->getReference(),
+                    microtime(true),
+                    -$base_volume,
+                    0,
+                    $base_balance
+                );
+                $base_balance->addTransaction($transaction);
+            }
+            else {
+                throw new \DomainException("Can't sell with Base {$base->getSymbol()}, as it has no balance.");
+            }
 
-            $quote_balance
-                ? $quote_balance->add($quote_volume)
-                : $balances->add(SpotBalance::create($quote, $quote_volume));
+            if ($quote_balance) {
+                $quote_balance->add($quote_volume);
+            }
+            else {
+                $quote_balance = SpotBalance::create($quote, $quote_volume);
+                $balances->add($quote_balance);
+            }
+            $transaction = new SpotTransaction(
+                'T_' . time() . '_' . $order->getPairSymbol(),
+                $order->getTimestamp(),
+                $order->getReference(),
+                microtime(true),
+                $base_volume,
+                0,
+                $quote_balance
+            );
+            $quote_balance->addTransaction($transaction);
 
             $message = "     [SELL] [$date] $base_volume {$base->getSymbol()} ==> $quote_volume {$quote->getSymbol()}";
             $this->output_section_order->overwrite($message);

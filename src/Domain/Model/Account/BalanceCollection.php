@@ -56,6 +56,15 @@ class BalanceCollection extends ArrayCollection
         return null;
     }
 
+    public function findOneWithAssetSymbolOrFail(string $symbol): Balance
+    {
+        $balance = $this->findOneWithAssetSymbol($symbol);
+        if (!$balance) {
+            throw new NotFoundException("Balance with asset symbol $symbol not found!");
+        }
+        return $balance;
+    }
+
     public function findOfAssetOrFail(Asset $asset): Balance
     {
         $balance = $this->findOfAsset($asset);

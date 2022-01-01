@@ -24,14 +24,13 @@ class SellStepAllStrategy extends SellStrategy
         return 5;
     }
 
-    public function checkCanSell(Account $account): bool
-    {
-        return $account->getSpotBalances()->filterCrypto()->filterNonZero()->count() > 0;
-    }
-
     public function run(Account $account, CandleCollection $candles): ?Order
     {
-        if($candles->count() === 0) {
+        if (!$account->canSell()) {
+            return null;
+        }
+
+        if ($candles->count() === 0) {
             return null;
         }
         $candles = $this->curateData($candles);

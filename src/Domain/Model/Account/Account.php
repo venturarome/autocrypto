@@ -157,16 +157,32 @@ class Account
         return $this->getSpotBalances()->findOfAsset($asset);
     }
 
+    public function canTrade(): bool
+    {
+        return $this->canBuy() || $this->canSell();
+    }
+
+    public function canBuy(): bool
+    {
+        $quote_balance = $this->getSpotBalances()->findOneWithAssetSymbol($this->getQuoteSymbol());
+        return $quote_balance && $quote_balance->getAmount() > $this->getSafetyAmount();
+    }
+
+    public function canSell(): bool
+    {
+        return $this->getSpotBalances()->filterCrypto()->filterNonZero()->count() > 0;
+    }
+
     /** $price is how much Base can be bought with one Quote */
     public function canPlaceOrder(Order $order, float $price): bool
     {
         if ($order->isBuy()) {
-            return $this->canBuy($order->getPair(), $price * $order->getVolume());
+            return $this->canPlaceBuyOrder($order->getPair(), $price * $order->getVolume());
         }
-        return $this->canSell($order->getPair(), $order->getVolume());
+        return $this->canPlaceSellOrder($order->getPair(), $order->getVolume());
     }
 
-    private function canBuy(Pair $pair, float $quote_amount): bool
+    private function canPlaceBuyOrder(Pair $pair, float $quote_amount): bool
     {
         $quote_balance = $this->getSpotBalances()->findOneWithAssetSymbol($pair->getQuoteSymbol());
         if (!$quote_balance) {
@@ -176,7 +192,7 @@ class Account
         return $available_amount > $quote_amount;   // TODO poner un límite de seguridad??
     }
 
-    private function canSell(Pair $pair, float $base_amount): bool
+    private function canPlaceSellOrder(Pair $pair, float $base_amount): bool
     {
         $base_balance = $this->getSpotBalances()->findOneWithAssetSymbol($pair->getBaseSymbol());
         if (!$base_balance) {
@@ -226,5 +242,11 @@ class Account
     public function getSellStrategyName(): ?string
     {
         return $this->getPreferences()->find(Preference::NAME_SELL_STRATEGY);
+    }
+
+    public function getSafetyAmount(): ?int
+    {
+        $value = $this->getPreferences()->find(Preference::NAME_SAFETY_AMOUNT);
+        return $value ? (int)$value : null;
     }
 }

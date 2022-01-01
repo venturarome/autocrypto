@@ -11,9 +11,6 @@ use App\Domain\Model\Trading\Order;
 class BuyStepAmountStrategy extends BuyStrategy
 {
     public const NAME = 'buy.step.amount';
-    protected const SAFETY_MARGIN = 10; // Quote
-
-    private ?SpotBalance $balance_eur;
 
 
     // TODO parametrizar
@@ -31,14 +28,12 @@ class BuyStepAmountStrategy extends BuyStrategy
         return 5;
     }
 
-    public function checkCanBuy(Account $account): bool
-    {
-        return ($this->balance_eur = $account->getSpotBalances()->findOneWithAssetSymbol('EUR'))
-            && $this->balance_eur->getAmount() - self::SAFETY_MARGIN > $this->balance_eur->getMinChange();
-    }
-
     public function run(Account $account, CandleCollection $candles): ?Order
     {
+        if (!$account->canBuy()) {
+            return null;
+        }
+
         if($candles->count() === 0) {
             return null;
         }
@@ -52,9 +47,10 @@ class BuyStepAmountStrategy extends BuyStrategy
             return null;
         }
 
+        $quote_balance = $account->getSpotBalances()->findOneWithAssetSymbolOrFail($account->getQuoteSymbol());
+        $available_quote_amount = min(self::BUY_AMOUNT_QUOTE, max(0, $quote_balance->getAmount() - $account->getSafetyAmount()));
         $price = $candles->getLastPrice();
-        $quote_amount = min(self::BUY_AMOUNT_QUOTE, max(0, $this->balance_eur->getAmount() - self::SAFETY_MARGIN));
-        $base_amount =  $quote_amount / $price;
+        $base_amount =  $available_quote_amount / $price;
         return Order::createMarketBuy(
             $account,
             $candles->getPair(),

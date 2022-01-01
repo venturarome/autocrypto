@@ -81,21 +81,14 @@ class AutoCryptoCommand extends Command
         $quote = $this->spot_asset_repo->findBySymbolOrFail($account->getQuoteSymbol());
         $pairs = $this->pair_repo->findByQuote($quote);
 
-        while ($buy_strategy->checkCanBuy($account) || $sell_strategy->checkCanSell($account)) {
+        while ($account->canTrade()) {
             foreach ($pairs as $pair) {
                 /** @var Pair $pair */
                 $candles = $this->getRealTimeCandles($pair, 1);
 
-                $order = null;
-                if ($buy_strategy->checkCanBuy($account)) {
-                    $order = $buy_strategy->run($account, $candles);
-                }
-                else if ($sell_strategy->checkCanSell($account)) {
+                $order = $buy_strategy->run($account, $candles);
+                if (!$order) {
                     $order = $sell_strategy->run($account, $candles);
-                }
-                else {
-                    // You ran out of money!
-                    return Command::FAILURE;
                 }
 
                 if ($order && $account->canPlaceOrder($order, $candles->getLastPrice())) {
@@ -106,7 +99,8 @@ class AutoCryptoCommand extends Command
             }
         }
 
-        return Command::SUCCESS;
+        // You ran out of money!
+        return Command::FAILURE;
     }
 
     private function getRealTimeCandles(Pair $pair, int $interval): CandleCollection

@@ -42,9 +42,11 @@ class Order
     //protected ?int $leverage;
     //protected string $status;     // kraken: info obtained from getOrdersInfo     // TODO change to Enum when PHP8.1 is available!
     // protected TimeInForce $time_in_force;  <-- So far, I will only create market orders!
-    //protected string $reference;
+    protected string $reference;    // TODO mapear en la BD si decidimos guardar órdenes!
     // protected int $userref;
     //protected DateTracker $date_tracker;
+
+    protected int $timestamp;    // TODO mapear en la BD si decidimos guardar órdenes!
 
 
     public static function createMarketBuy(Account $account, Pair $pair, float $volume): self
@@ -86,6 +88,9 @@ class Order
         $this->volume = $volume;
         $this->trigger_price = $trigger_price;
         $this->limit_price = $limit_price;
+
+        $this->timestamp = time();
+        $this->reference = 'O_' . $this->timestamp . '_' . $pair->getSymbol();
     }
 
     public function getPair(): Pair
@@ -126,5 +131,15 @@ class Order
     public function getVolume(): float
     {
         return $this->volume;
+    }
+
+    public function getTimestamp(): int
+    {
+        return $this->timestamp;
+    }
+
+    public function getReference(): string
+    {
+        return $this->reference;
     }
 }

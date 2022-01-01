@@ -25,13 +25,12 @@ class SellNoLossesAllStrategy extends SellStrategy
         return 10;
     }
 
-    public function checkCanSell(Account $account): bool
-    {
-        return $account->getSpotBalances()->filterCrypto()->filterNonZero()->count() > 0;
-    }
-
     public function run(Account $account, CandleCollection $candles): ?Order
     {
+        if (!$account->canSell()) {
+            return null;
+        }
+
         $candles = $this->curateData($candles);
 
         $base = $candles->getBase();

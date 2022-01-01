@@ -14,7 +14,5 @@ abstract class SellStrategy extends Strategy
 
     abstract public function getNumberOfCandles(): int;
 
-    abstract public function checkCanSell(Account $account): bool;
-
     abstract public function run(Account $account, CandleCollection $candles): ?Order;
 }

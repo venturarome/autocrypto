@@ -63,9 +63,13 @@ class SpotBalance extends Balance
 
     public function getLastTransactionTimestamp(): ?int
     {
-        /* @var SpotTransaction $last_transaction */
+        /* @var bool|SpotTransaction $last_transaction */
         $last_transaction = $this->transactions->last();
+        return $last_transaction !== false ? $last_transaction->getTimestamp() : null;
+    }
 
-        return $last_transaction?->getTimestamp();
+    public function addTransaction(SpotTransaction $transaction): void
+    {
+        $this->getTransactions()->add($transaction);
     }
 }

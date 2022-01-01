@@ -7,13 +7,15 @@ use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
 
 
-class BuyMomentumAllStrategy extends BuyStrategy
+class BuyMomentumAmountStrategy extends BuyStrategy
 {
-    public const NAME = 'buy.momentum.all';
+    public const NAME = 'buy.momentum.amount';
+
 
     // TODO parametrizar
     protected const MOMENTUM_RATIO = 3;
     private const MINIMUM_RETURN = 2;
+    private const BUY_AMOUNT_QUOTE = 20;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
     public function __construct() {
@@ -50,9 +52,9 @@ class BuyMomentumAllStrategy extends BuyStrategy
         }
 
         $quote_balance = $account->getSpotBalances()->findOneWithAssetSymbolOrFail($account->getQuoteSymbol());
-        $available_quote_amount = $quote_balance->getAmount() - $account->getSafetyAmount();
+        $quote_amount = min(self::BUY_AMOUNT_QUOTE, max(0, $quote_balance->getAmount() - $account->getSafetyAmount()));
         $price = $candles->getLastPrice();
-        $base_amount = $available_quote_amount / $price;
+        $base_amount =  $quote_amount / $price;
         return Order::createMarketBuy(
             $account,
             $candles->getPair(),
