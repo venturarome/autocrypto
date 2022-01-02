@@ -13,7 +13,6 @@ use App\Domain\Model\Asset\SpotAsset;
 use App\Domain\Model\Trading\Candle;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
-use App\Domain\Model\Trading\OrderCollection;
 use App\Domain\Repository\Asset\PairRepository;
 use App\Domain\Repository\Asset\SpotAssetRepository;
 use App\Domain\Repository\Trading\CandleRepository;
@@ -23,7 +22,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 
-class BacktestCommand extends Command
+class BacktestSingleCommand extends Command
 {
     private const INITIAL_AMOUNT = 100;
     private const MAX_RESULTS = 200;
@@ -59,8 +58,8 @@ class BacktestCommand extends Command
     protected function configure(): void
     {
         $this
-            ->setName('autocrypto:backtest')
-            ->setDescription("Backtest a trading strategy")
+            ->setName('autocrypto:backtest:single')
+            ->setDescription("Backtest a trading strategy with a single pair")
             ->addArgument('buy_strategy_name', InputArgument::REQUIRED, 'Strategy to buy')
             ->addArgument('sell_strategy_name', InputArgument::REQUIRED, 'Strategy to sell')
             ->addArgument('base_asset_symbol', InputArgument::REQUIRED, 'Asset to buy-sell. Quote is EUR')
