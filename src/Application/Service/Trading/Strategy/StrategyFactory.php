@@ -17,6 +17,7 @@ class StrategyFactory
             SellStepAllStrategy::NAME => new SellStepAllStrategy(),
             SellNoLossesAllStrategy::NAME => new SellNoLossesAllStrategy(),
             SellAllWithLockPeriodStrategy::NAME => new SellAllWithLockPeriodStrategy(),
+            SellMomentumAllStrategy::NAME => new SellMomentumAllStrategy(),
             SellNullStrategy::NAME => new SellNullStrategy(),
             default => throw new NotFoundException("Strategy with name '$name' not found by StrategyFactory!"),
         };

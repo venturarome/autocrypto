@@ -15,6 +15,10 @@ class SellNullStrategy extends SellStrategy
         parent::__construct(self::NAME);
     }
 
+    public static function dumpConstants(): string
+    {
+        return "";
+    }
 
     public function getNumberOfCandles(): int
     {

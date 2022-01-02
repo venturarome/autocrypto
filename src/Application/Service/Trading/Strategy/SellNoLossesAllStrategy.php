@@ -12,13 +12,17 @@ class SellNoLossesAllStrategy extends SellStrategy
     public const NAME = 'sell.no_losses.all';
 
     // TODO parametrizar
-    private const MINIMUN_RETURN = -1;
+    private const RETURN_THRESHOLD = -1;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
     public function __construct() {
         parent::__construct(self::NAME);
     }
 
+    public static function dumpConstants(): string
+    {
+        return "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL;
+    }
 
     public function getNumberOfCandles(): int
     {
@@ -40,7 +44,7 @@ class SellNoLossesAllStrategy extends SellStrategy
         /** @var SpotBalance $base_balance */
         $base_balance = $account->getBalanceOf($base);
 
-        if ($candles->getPercentageReturn() > self::MINIMUN_RETURN                  // Performance still good
+        if ($candles->getPercentageReturn() > self::RETURN_THRESHOLD                // Performance still good
             &&                                                                      // and
             $candles->getLastPrice() > 0.98 * $base_balance->getAveragePrice()      // Price over 98% of avg. purchase price
         ) {

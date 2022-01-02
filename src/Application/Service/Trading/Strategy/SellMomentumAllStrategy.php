@@ -7,15 +7,13 @@ use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
 
 
-class BuyMomentumAmountStrategy extends BuyStrategy
+class SellMomentumAllStrategy extends BuyStrategy
 {
-    public const NAME = 'buy.momentum.amount';
-
+    public const NAME = 'sell.momentum.all';
 
     // TODO parametrizar
     protected const MOMENTUM_RATIO = 3;
-    private const RETURN_THRESHOLD = 2;
-    private const BUY_AMOUNT_QUOTE = 20;
+    private const RETURN_THRESHOLD = -1;   // should be called return_threshold??
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
     public function __construct() {
@@ -25,8 +23,7 @@ class BuyMomentumAmountStrategy extends BuyStrategy
     public static function dumpConstants(): string
     {
         return "MOMENTUM_RATIO: " . self::MOMENTUM_RATIO . PHP_EOL
-            . "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL
-            . "BUY_AMOUNT_QUOTE: " . self::BUY_AMOUNT_QUOTE . PHP_EOL;
+            . "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL;
     }
 
     public function getNumberOfCandles(): int
@@ -39,7 +36,9 @@ class BuyMomentumAmountStrategy extends BuyStrategy
         if ($candles->count() === 0) {
             return null;
         }
-        if ($account->hasBalanceOf($candles->getBase())) {                  // already has a position
+
+        $base_balance = $account->getBalanceOf($candles->getBase());
+        if (!$base_balance) {                  // already has a position
             return null;
         }
 
@@ -48,24 +47,16 @@ class BuyMomentumAmountStrategy extends BuyStrategy
         $candles = $this->curateData($candles);
         $current_momentum = $candles->getAverageClose() - $candles->getAverageOpen();
 
-        if ($current_momentum <= 0                                          // price going down
+        if ($current_momentum > 0                                           // price going up
             ||                                                              // or
-            $current_momentum < self::MOMENTUM_RATIO * $average_momentum    // low momentum ratio
+            self::MOMENTUM_RATIO * $current_momentum > $average_momentum    // high momentum ratio  TODO test
             ||                                                              // or
-            $candles->getPercentageReturn() < self::RETURN_THRESHOLD        // price not going up enough
+            $candles->getPercentageReturn() > self::RETURN_THRESHOLD        // price not going down enough
         ) {
             return null;
         }
 
-        $quote_balance = $account->getSpotBalances()->findOneWithAssetSymbolOrFail($account->getQuoteSymbol());
-        $quote_amount = min(self::BUY_AMOUNT_QUOTE, max(0, $quote_balance->getAmount() - $account->getSafetyAmount()));
-        $price = $candles->getLastPrice();
-        $base_amount =  $quote_amount / $price;
-        return Order::createMarketBuy(
-            $account,
-            $candles->getPair(),
-            $base_amount,
-        );
+        return Order::createMarketSell($account, $candles->getPair(), $base_balance->getAmount());
     }
 
     public function curateData(CandleCollection $candles): CandleCollection

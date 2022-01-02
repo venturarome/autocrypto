@@ -12,14 +12,19 @@ class BuyMomentumAllStrategy extends BuyStrategy
     public const NAME = 'buy.momentum.all';
 
     // TODO parametrizar
-    protected const MOMENTUM_RATIO = 3;
-    private const MINIMUM_RETURN = 2;
+    protected const MOMENTUM_RATIO = 10;
+    private const RETURN_THRESHOLD = 2;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
     public function __construct() {
         parent::__construct(self::NAME);
     }
 
+    public static function dumpConstants(): string
+    {
+        return "MOMENTUM_RATIO: " . self::MOMENTUM_RATIO . PHP_EOL
+            . "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL;
+    }
 
     public function getNumberOfCandles(): int
     {
@@ -44,7 +49,7 @@ class BuyMomentumAllStrategy extends BuyStrategy
             ||                                                              // or
             $current_momentum < self::MOMENTUM_RATIO * $average_momentum    // low momentum ratio
             ||                                                              // or
-            $candles->getPercentageReturn() < self::MINIMUM_RETURN          // price not going up enough
+            $candles->getPercentageReturn() < self::RETURN_THRESHOLD        // price not going up enough
         ) {
             return null;
         }

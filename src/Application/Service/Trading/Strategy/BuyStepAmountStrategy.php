@@ -14,7 +14,7 @@ class BuyStepAmountStrategy extends BuyStrategy
 
 
     // TODO parametrizar
-    private const MINIMUM_RETURN = 4;
+    private const RETURN_THRESHOLD = 4;
     private const BUY_AMOUNT_QUOTE = 20;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
@@ -22,6 +22,11 @@ class BuyStepAmountStrategy extends BuyStrategy
         parent::__construct(self::NAME);
     }
 
+    public static function dumpConstants(): string
+    {
+        return "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL
+            . "BUY_AMOUNT_QUOTE: " . self::BUY_AMOUNT_QUOTE . PHP_EOL;
+    }
 
     public function getNumberOfCandles(): int
     {
@@ -43,7 +48,7 @@ class BuyStepAmountStrategy extends BuyStrategy
 
         $candles = $this->curateData($candles);
 
-        if ($candles->getPerformance()->getReturn() < self::MINIMUM_RETURN) {   // poor performance
+        if ($candles->getPerformance()->getReturn() < self::RETURN_THRESHOLD) {   // poor performance
             return null;
         }
 

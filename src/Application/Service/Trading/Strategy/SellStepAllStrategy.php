@@ -11,13 +11,17 @@ class SellStepAllStrategy extends SellStrategy
     public const NAME = 'sell.step.all';
 
     // TODO parametrizar
-    private const MAXIMUM_RETURN = -0.2;
+    private const RETURN_THRESHOLD = -0.2;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
     public function __construct() {
         parent::__construct(self::NAME);
     }
 
+    public static function dumpConstants(): string
+    {
+        return "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL;
+    }
 
     public function getNumberOfCandles(): int
     {
@@ -41,7 +45,7 @@ class SellStepAllStrategy extends SellStrategy
         }
         $base_balance = $account->getBalanceOf($base);
 
-        if ($candles->getPerformance()->getPercentageReturn() > self::MAXIMUM_RETURN) {
+        if ($candles->getPerformance()->getPercentageReturn() > self::RETURN_THRESHOLD) {
             return null;
         }
 

@@ -12,17 +12,21 @@ class SellAllWithLockPeriodStrategy extends SellStrategy
     public const NAME = 'sell.lock_period.all';
 
     // TODO parametrizar
-    private const MINIMUN_RETURN = -1;
+    private const MINIMUN_RETURN = -2;
 
     // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
     public function __construct() {
         parent::__construct(self::NAME);
     }
 
+    public static function dumpConstants(): string
+    {
+        return "MINIMUN_RETURN: " . self::MINIMUN_RETURN . PHP_EOL;
+    }
 
     public function getNumberOfCandles(): int
     {
-        return 10;
+        return 5;
     }
 
     public function run(Account $account, CandleCollection $candles): ?Order
@@ -42,8 +46,8 @@ class SellAllWithLockPeriodStrategy extends SellStrategy
         $t_last_candle = $candles->getLastTimestamp();
 
         // TODO idea: llevar el tiempo de cooldown a una account::preference.
-        // First 15 minutes after last trade, do nothing.
-        if ($t_last_candle - $t_last_transaction < 15 * 60) {
+        // First 5 minutes after last trade, do nothing.
+        if ($t_last_candle - $t_last_transaction < 5 * 60) {
             return null;
         }
 
@@ -51,7 +55,7 @@ class SellAllWithLockPeriodStrategy extends SellStrategy
 
         if ($candles->getPercentageReturn() > self::MINIMUN_RETURN                  // Performance still good
             &&                                                                      // and
-            $candles->getLastPrice() > 0.98 * $base_balance->getAveragePrice()      // Price over 98% of avg. purchase price
+            $candles->getLastPrice() > /*0.98 **/ $base_balance->getAveragePrice()      // Price over /*98% of*/ avg. purchase price
         ) {
             return null;
         }
