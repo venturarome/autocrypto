@@ -229,6 +229,15 @@ class Account
         return $this->preferences;
     }
 
+    public function updatePreferences(PreferenceCollection $preferences): void
+    {
+        foreach ($preferences as $preference) {
+            /** @var Preference $preference */
+            //$this->updatePreference($preference);
+            $this->getPreferences()->add($preference);
+        }
+    }
+
     public function getQuoteSymbol(): string
     {
         return $this->getPreferences()->find(Preference::NAME_QUOTE_SYMBOL) ?? 'EUR';

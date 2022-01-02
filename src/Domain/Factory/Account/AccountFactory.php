@@ -3,6 +3,7 @@
 namespace App\Domain\Factory\Account;
 
 use App\Domain\Model\Account\Account;
+use App\Domain\Model\Account\PreferenceCollection;
 use App\Domain\Model\Account\SpotBalanceCollection;
 use App\Domain\Model\Account\StakingBalanceCollection;
 use App\Domain\Model\Shared\DateTracker\DateTracker;
@@ -31,6 +32,7 @@ class AccountFactory extends ReflectionFactory
             'secret_key' => $secret_key,
             'spot_balances' => new SpotBalanceCollection(),
             'staking_balances' => new StakingBalanceCollection(),
+            'preferences' => new PreferenceCollection(),
             'date_tracker' => DateTracker::create()
 //            'timestamps' => new Timestamps($dt = new DateTimeImmutable(), $dt),
 //            'created_at' => $dt = new DateTimeImmutable(),
