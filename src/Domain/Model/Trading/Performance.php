@@ -6,20 +6,10 @@ use App\Domain\Model\Asset\Pair;
 
 class Performance {
 
-//    public const PERIOD_DAY = 'day';                // 1 day
-//    public const PERIOD_WEEK = 'week';              // 7 days
-//    public const PERIOD_MONTH = 'month';            // calendar month (starts on 1st each month)
-//    public const PERIOD_QUARTER = 'year';           // calendar year (starts on 1st January)
-
     protected Pair $pair;
     protected float $return;    // in percentage! 1.05 means +5%
-//    protected string $period;
     protected int $from;
     protected int $to;
-
-    // TODO debería tener en cuenta sobre qué divisa se toma la referencia?
-    //      Se podría crear un PerformanceMap, que sea una colección de PerformanceCollections.
-    //      Así tendríamos las rentabilidades diarias de cada una de las divisas de una cartera.
 
     public function __construct(Pair $pair, float $return, int $from, int $to) {
         $this->pair = $pair;
