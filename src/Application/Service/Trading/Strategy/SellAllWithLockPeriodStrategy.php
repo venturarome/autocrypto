@@ -7,9 +7,9 @@ use App\Domain\Model\Account\SpotBalance;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
 
-class SellAllWithBlockPeriodStrategy extends SellStrategy
+class SellAllWithLockPeriodStrategy extends SellStrategy
 {
-    public const NAME = 'sell.block_period.all';
+    public const NAME = 'sell.lock_period.all';
 
     // TODO parametrizar
     private const MINIMUN_RETURN = -1;
