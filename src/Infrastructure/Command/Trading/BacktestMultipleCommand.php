@@ -19,7 +19,6 @@ use App\Domain\Repository\Trading\CandleRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class BacktestMultipleCommand extends Command
@@ -35,8 +34,6 @@ class BacktestMultipleCommand extends Command
 
     // Cache
     private OutputInterface $output;
-    private ConsoleSectionOutput $output_section_date;
-    private ConsoleSectionOutput $output_section_order;
     private \DateTime $date_from;
     private \DateTime $date_to;
     private int $timespan;
@@ -76,8 +73,6 @@ class BacktestMultipleCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->output = $output;
-        $this->output_section_date = $output->section();
-        $this->output_section_order = $output->section();
 
         $this->output->writeln([
             'Backtesting Strategies',
@@ -139,11 +134,9 @@ class BacktestMultipleCommand extends Command
 
             if (!$account->canTrade()) {
                 $date = date("Y-m-d H:i:s", $candle->getTimestamp());
-                $this->output_section_order->overwrite(" On $date, you ran out of money!");
+                $this->output->writeln(" On $date, you ran out of money!");
                 return Command::INVALID;
             }
-            
-            $this->output_section_date->overwrite(date('Y-m-d H:i', $candle->getTimestamp()));
 
             $pair_symbol = $candle->getPairSymbol();
 
@@ -227,16 +220,15 @@ class BacktestMultipleCommand extends Command
         if ($order->isBuy()) {
             if ($quote_balance) {
                 $quote_balance->subtract($quote_volume);
-                $transaction = new SpotTransaction(
-                    'T_' . time() . '_' . $order->getPairSymbol(),
-                    $order->getTimestamp(),
+                $quote_transaction = new SpotTransaction(
+                    'T_' . $last_candle->getTimestamp() . '_' . $order->getPairSymbol(),
+                    $last_candle->getTimestamp(),
                     $order->getReference(),
-                    microtime(true),
+                    $last_candle->getTimestamp(),
                     -$quote_volume,
                     0,
                     $quote_balance
                 );
-                $quote_balance->addTransaction($transaction);
             }
             else {
                 throw new \DomainException("Can't buy with Quote {$base->getSymbol()}, as it has no balance.");
@@ -249,34 +241,35 @@ class BacktestMultipleCommand extends Command
                 $base_balance = SpotBalance::create($base, $base_volume);
                 $balances->add($base_balance);
             }
-            $transaction = new SpotTransaction(
-                'T_' . time() . '_' . $order->getPairSymbol(),
-                $order->getTimestamp(),
+            $base_transaction = new SpotTransaction(
+                'T_' . $last_candle->getTimestamp() . '_' . $order->getPairSymbol(),
+                $last_candle->getTimestamp(),
                 $order->getReference(),
-                microtime(true),
+                $last_candle->getTimestamp(),
                 $base_volume,
                 0,
                 $base_balance
             );
-            $base_balance->addTransaction($transaction);
+            SpotTransaction::setPriceFromCounterparts($quote_transaction, $base_transaction);
+            $quote_balance->addTransaction($quote_transaction);
+            $base_balance->addTransaction($base_transaction);
 
             $message = "     [BUY] [$date] $quote_volume {$quote->getSymbol()} ==> $base_volume {$base->getSymbol()}";
-            $this->output_section_order->overwrite($message);
+            $this->output->writeln($message);
             $this->writeToFile([$message]);
         }
         else {  // is sell
             if ($base_balance) {
                 $base_balance->subtract($base_volume);
-                $transaction = new SpotTransaction(
-                    'T_' . time() . '_' . $order->getPairSymbol(),
-                    $order->getTimestamp(),
+                $base_transaction = new SpotTransaction(
+                    'T_' . $last_candle->getTimestamp() . '_' . $order->getPairSymbol(),
+                    $last_candle->getTimestamp(),
                     $order->getReference(),
-                    microtime(true),
+                    $last_candle->getTimestamp(),
                     -$base_volume,
                     0,
                     $base_balance
                 );
-                $base_balance->addTransaction($transaction);
             }
             else {
                 throw new \DomainException("Can't sell with Base {$base->getSymbol()}, as it has no balance.");
@@ -289,25 +282,26 @@ class BacktestMultipleCommand extends Command
                 $quote_balance = SpotBalance::create($quote, $quote_volume);
                 $balances->add($quote_balance);
             }
-            $transaction = new SpotTransaction(
-                'T_' . time() . '_' . $order->getPairSymbol(),
-                $order->getTimestamp(),
+            $quote_transaction = new SpotTransaction(
+                'T_' . $last_candle->getTimestamp() . '_' . $order->getPairSymbol(),
+                $last_candle->getTimestamp(),
                 $order->getReference(),
-                microtime(true),
+                $last_candle->getTimestamp(),
                 $base_volume,
                 0,
                 $quote_balance
             );
-            $quote_balance->addTransaction($transaction);
+            SpotTransaction::setPriceFromCounterparts($base_transaction, $quote_transaction);
+            $base_balance->addTransaction($base_transaction);
+            $quote_balance->addTransaction($quote_transaction);
 
             $message = "     [SELL] [$date] $base_volume {$base->getSymbol()} ==> $quote_volume {$quote->getSymbol()}";
-            $this->output_section_order->overwrite($message);
+            $this->output->writeln($message);
             $this->writeToFile([$message]);
 
             $amount_eur = $quote_balance->getAmount() + $last_candle->getClose() * $base_balance->getAmount();
             $total_return = 100 * ($amount_eur/self::INITIAL_AMOUNT - 1);
             $message = "       [SUMMARY] On $date, you have $amount_eur EUR ($total_return %)";
-            //$this->output_section_order->writeln($message);
             $this->writeToFile([$message]);
 
         }
