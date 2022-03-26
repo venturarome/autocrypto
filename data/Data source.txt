@@ -7,3 +7,6 @@ https://data.binance.vision/?prefix=data/spot/
 
 OHLC info:
 https://www.investopedia.com/terms/o/ohlcchart.asp
+
+Charts:
+https://developers.google.com/chart/interactive/docs/gallery/candlestickchart?hl=es
