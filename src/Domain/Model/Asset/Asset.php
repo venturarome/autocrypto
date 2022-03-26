@@ -33,6 +33,10 @@ abstract class Asset
         return $this->symbol;
     }
 
+    abstract public function getName(): ?string;
+
+    abstract public function getType(): ?string;
+
     public function getDecimals(): float
     {
         return $this->decimals;

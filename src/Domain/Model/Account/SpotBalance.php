@@ -30,6 +30,11 @@ class SpotBalance extends Balance
         $this->transactions = new SpotTransactionCollection();
     }
 
+    public function getType(): string
+    {
+        return self::TYPE_SPOT;
+    }
+
     public function getAsset(): SpotAsset
     {
         return $this->getSpotAsset();

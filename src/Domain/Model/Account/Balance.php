@@ -2,6 +2,7 @@
 
 namespace App\Domain\Model\Account;
 
+use App\Domain\Model\Asset\Asset;
 use Ramsey\Uuid\Uuid;
 
 
@@ -13,7 +14,7 @@ abstract class Balance
     protected int $id;
     protected string $uuid;
     protected ?Account $account;
-    protected string $type;
+    protected string $type; // Se puede quitar, nunca se está rellenando en el orm mapper.
     protected float $amount;
 
     protected function __construct(string $type, float $amount) {
@@ -37,6 +38,8 @@ abstract class Balance
     {
         return $this->amount;
     }
+
+    abstract public function getType(): string;
 
     public function update(float $amount): void
     {
@@ -71,11 +74,21 @@ abstract class Balance
         $this->account = $account;
     }
 
-    abstract public function getAsset();
+    abstract public function getAsset(): Asset;
 
     public function getAssetSymbol(): string
     {
         return $this->getAsset()->getSymbol();
+    }
+
+    public function getAssetName(): ?string
+    {
+        return $this->getAsset()->getName();
+    }
+
+    public function getAssetType(): ?string
+    {
+        return $this->getAsset()->getType();
     }
 
     public function getMinChange(): float

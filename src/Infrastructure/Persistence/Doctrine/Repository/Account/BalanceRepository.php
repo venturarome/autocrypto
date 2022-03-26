@@ -19,6 +19,6 @@ class BalanceRepository extends ServiceEntityRepository implements BalanceReposi
 
     public function findOfAccount(Account $account): array
     {
-        // TODO: Implement findOfAccount() method.
+        return $this->findBy(['account' => $account]);
     }
 }

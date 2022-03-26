@@ -62,4 +62,14 @@ class StakingAsset extends Asset
         return $this->spot_asset;
     }
 
+    public function getName(): ?string
+    {
+        return $this->spot_asset->getName();
+    }
+
+    public function getType(): ?string
+    {
+        return $this->spot_asset->getType();
+    }
+
 }

@@ -53,6 +53,16 @@ class Account
         return [$this->api_key, $this->secret_key];
     }
 
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function getCreatedAt(): \DateTime
+    {
+        return $this->date_tracker->getCreatedAt();
+    }
+
     public function updateBalances(SpotBalanceCollection $new_balances): array
     {
         $new_spot_balances = $new_balances->filterSpot();

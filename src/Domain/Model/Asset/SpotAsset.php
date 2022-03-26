@@ -6,7 +6,7 @@ namespace App\Domain\Model\Asset;
 class SpotAsset extends Asset
 {
 
-    // TODO change to Enum when PHP8.1 is available!
+    // TODO change to Enum when PHP8.1 is available! - TODO pensar si mover esto a Asset
     public const TYPE_FIAT = 'fiat';
     public const TYPE_CRYPTO = 'crypto';
 
@@ -36,6 +36,11 @@ class SpotAsset extends Asset
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function isFiat(): bool

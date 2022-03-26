@@ -25,6 +25,11 @@ class StakingBalance extends Balance
         $this->transactions = new StakingTransactionCollection();
     }
 
+    public function getType(): string
+    {
+        return self::TYPE_STAKING;
+    }
+
     public function getAsset(): Asset
     {
         return $this->getStakingAsset();

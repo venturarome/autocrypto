@@ -2,14 +2,14 @@
 
 namespace App\Domain\Model\Shared\DateTracker;
 
-use DateTimeImmutable;
-use DateTimeInterface;
+use DateTime;
+
 
 class DateTracker
 {
-    protected DateTimeInterface $created_at;
-    protected DateTimeInterface $updated_at;
-    protected DateTimeInterface $deleted_at;
+    protected DateTime $created_at;
+    protected DateTime $updated_at;
+    protected DateTime $deleted_at;
 
 
     public static function create(): self
@@ -19,37 +19,37 @@ class DateTracker
 
     private function __construct()
     {
-        $now = new DateTimeImmutable();
+        $now = new DateTime();
         $this->created_at = $now;
         $this->updated_at = $now;
     }
 
     public function update(): void
     {
-        $this->updated_at = new DateTimeImmutable();
+        $this->updated_at = new DateTime();
     }
 
     public function delete(): void
     {
-        $now = new DateTimeImmutable();
+        $now = new DateTime();
         $this->updated_at = $now;
         $this->deleted_at = $now;
     }
 
 
-    public function getCreatedAt(): DateTimeImmutable
+    public function getCreatedAt(): DateTime
     {
-        return $this->created_at;
+        return clone $this->created_at;
     }
 
-    public function getUpdatedAt(): DateTimeImmutable
+    public function getUpdatedAt(): DateTime
     {
-        return $this->updated_at;
+        return clone $this->updated_at;
     }
 
-    public function getDeletedAt(): DateTimeImmutable
+    public function getDeletedAt(): DateTime
     {
-        return $this->deleted_at;
+        return clone $this->deleted_at;
     }
 
 
