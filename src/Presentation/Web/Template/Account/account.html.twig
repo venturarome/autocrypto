@@ -26,10 +26,10 @@
                 <tbody>
                 <tr>
                     <td>{{ account.reference }}</td>
-                    <td>{{ account.active }}</td>
+                    <td>{% if account.active %}Sí{% else %}No{% endif %}</td>
                     <td>{{ account.createdAt | date('Y-m-d') }}</td>
-                    <td>{{ account.canBuy }}</td>
-                    <td>{{ account.canSell }}</td>
+                    <td>{% if account.canBuy %}Sí{% else %}No{% endif %}</td>
+                    <td>{% if account.canSell %}Sí{% else %}No{% endif %}</td>
                 </tr>
                 </tbody>
             </table>

@@ -80,4 +80,14 @@ class Pair
     {
         return $this->quote->getSymbol();
     }
+
+    public function getDecimals(): int
+    {
+        return $this->decimals;
+    }
+
+    public function getOrderMin(): float
+    {
+        return $this->order_min;
+    }
 }

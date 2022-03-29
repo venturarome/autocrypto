@@ -38,7 +38,7 @@ class SpotAsset extends Asset
         return $this->type;
     }
 
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }

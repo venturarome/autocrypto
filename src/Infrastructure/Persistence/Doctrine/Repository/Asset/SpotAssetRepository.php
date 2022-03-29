@@ -14,4 +14,10 @@ class SpotAssetRepository extends AssetRepository implements SpotAssetRepository
         parent::__construct($registry, SpotAsset::class);
     }
 
+    // Just added to typehint the return. Is it any other way to do this and avoid overriding the method?
+    public function findBySymbol(string $symbol): ?SpotAsset
+    {
+        return parent::findBySymbol($symbol);
+    }
+
 }

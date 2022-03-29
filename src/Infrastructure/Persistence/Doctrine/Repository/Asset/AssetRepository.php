@@ -9,7 +9,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 
-class AssetRepository extends ServiceEntityRepository implements AssetRepositoryI
+abstract class AssetRepository extends ServiceEntityRepository implements AssetRepositoryI
 {
     public function __construct(ManagerRegistry $registry, string $entity_class = Asset::class)
     {

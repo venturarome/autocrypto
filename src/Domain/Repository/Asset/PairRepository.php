@@ -14,5 +14,7 @@ interface PairRepository
     public function findByAssets(SpotAsset $base, SpotAsset $quote): ?Pair;
     public function findByAssetsOrFail(SpotAsset $base, SpotAsset $quote): Pair;
 
+    public function findByAsset(SpotAsset $asset): PairCollection;
+
     public function findByQuote(SpotAsset $quote): PairCollection;
 }

@@ -46,6 +46,17 @@ class PairRepository extends ServiceEntityRepository implements PairRepositoryI
         return $pair;
     }
 
+    public function findByAsset(SpotAsset $asset): PairCollection
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->where('a.quote = :asset')
+            ->orWhere('a.base = :asset')
+            ->setParameter('asset', $asset)
+        ;
+
+        return new PairCollection($qb->getQuery()->getResult());
+    }
+
     public function findByQuote(SpotAsset $quote): PairCollection
     {
         return new PairCollection($this->findBy(['quote' => $quote]));
