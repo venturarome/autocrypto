@@ -22,10 +22,10 @@ class CandleRepository extends ServiceEntityRepository /*RepositoryBase*/ implem
         return $this->findOneBy(['pair' => $pair, 'timespan' => $timespan, 'timestamp' => $timestamp]);
     }
 
-    public function findForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to, int $first_result, int $max_results): CandleCollection
+    public function findForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to, int $first_result = null, int $max_results = null): CandleCollection
     {
         $qb = $this->createQueryBuilder('c')
-            ->where('c.pair = :pair')   // TODO c.pair_id??
+            ->where('c.pair = :pair')
             ->andWhere('c.timespan = :timespan')
             ->andWhere('c.timestamp >= :timestamp_from')
             ->andWhere('c.timestamp <= :timestamp_to')
@@ -39,5 +39,23 @@ class CandleRepository extends ServiceEntityRepository /*RepositoryBase*/ implem
             ->setMaxResults($max_results);
 
         return new CandleCollection($pair, $timespan, $qb->getQuery()->getResult());
+    }
+
+    public function countForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to): int
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->select('count (c)')
+            ->where('c.pair = :pair')
+            ->andWhere('c.timespan = :timespan')
+            ->andWhere('c.timestamp >= :timestamp_from')
+            ->andWhere('c.timestamp <= :timestamp_to')
+            ->setParameters([
+                'pair' => $pair,
+                'timespan' => $timespan,
+                'timestamp_from' => $date_from->getTimestamp(),
+                'timestamp_to' => $date_to->getTimestamp(),
+            ]);
+
+        return $qb->getQuery()->getSingleScalarResult();
     }
 }

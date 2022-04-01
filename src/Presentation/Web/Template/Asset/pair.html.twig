@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Par de divisas {{ symbol }}{% endblock %}
+
+{% block body %}
+
+    <h1>Par de divisas {{ symbol }}</h1>
+
+    <p><a href="{{ path('pairs') }}">Volver a listado de pares de divisas</a></p>
+
+    <div class="container">
+        <h2>Resumen</h2>
+        {% if pair is null %}
+            No hay ningún par de divisas con el símbolo indicado.
+        {% else %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Símbolo</th>
+                    <th scope="col">Base</th>
+                    <th scope="col">Quote</th>
+                    <th scope="col">Decimales</th>
+                    <th scope="col">Compra mínima (base)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ pair.symbol }}</td>
+                    <td>{{ pair.baseSymbol }}</td>
+                    <td>{{ pair.quoteSymbol }}</td>
+                    <td>{{ pair.decimals }}</td>
+                    <td>{{ pair.orderMin }}</td>
+                </tr>
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <h2>Velas</h2>
+        {% if candles is null %}
+            No se encontraron velas de este par de divisas entre las fechas {{ start_date | date('Y-m-d') }} y {{ end_date | date('Y-m-d') }}.
+        {% else %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Número de velas</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for date, count in candles %}
+                    <tr>
+                        <td>{{ date }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+{% endblock %}

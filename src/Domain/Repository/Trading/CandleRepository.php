@@ -12,4 +12,6 @@ interface CandleRepository
     public function findOneByPairTimespanAndTimestamp(Pair $pair, int $timespan, int $timestamp): ?Candle;
 
     public function findForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to, int $first_result, int $max_results): CandleCollection;
+
+    public function countForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to): int;
 }

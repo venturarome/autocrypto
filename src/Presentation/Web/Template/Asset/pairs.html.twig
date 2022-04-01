@@ -1,17 +1,16 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Lista de divisas{% endblock %}
+{% block title %}Lista de pares de divisas{% endblock %}
 
 {% block body %}
 
-    <h1>Lista de divisas</h1>
+    <h1>Lista de pares de divisas</h1>
 
-    {% if assets | length > 0 %}
+    {% if pairs | length > 0 %}
         <ul>
-            {% for asset in assets %}
+            {% for pair in pairs %}
                 <li>
-                    <a href="{{ path('asset', {'symbol': asset.symbol}) }}">{{ asset.symbol }}</a>
-                    {% if asset.name %}({{ asset.name }}){% endif %}
+                    <a href="{{ path('pair', {'symbol': pair.symbol}) }}">{{ pair.symbol }}</a>
                 </li>
             {% endfor %}
         </ul>

@@ -6,7 +6,7 @@
 
     <h1>Divisa {{ symbol }}</h1>
 
-    <p><a href="{{ path('assets') }}">Volver</a></p>
+    <p><a href="{{ path('assets') }}">Volver a listado de divisas</a></p>
 
     <div class="container">
         <h2>Resumen</h2>
@@ -54,7 +54,7 @@
                 <tbody>
                 {% for pair in pairs %}
                     <tr>
-                        <td>{{ pair.symbol }}</td>
+                        <td><a href="{{ path('pair', {'symbol': pair.symbol}) }}">{{ pair.symbol }}</a></td>
                         <td>{{ pair.baseSymbol }}</td>
                         <td>{{ pair.quoteSymbol }}</td>
                         <td>{{ pair.decimals }}</td>
