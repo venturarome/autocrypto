@@ -37,6 +37,30 @@
     </div>
 
     <div class="container">
+        <h2>Preferencias</h2>
+        {% if preferences is null %}
+            No se encontraron posiciones.
+        {% else %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Valor</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for preference in preferences %}
+                    <tr>
+                        <td>{{ preference.name }}</td>
+                        <td>{{ preference.value }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    <div class="container">
         <h2>Balance</h2>
         {% if balances is null %}
             No se encontraron posiciones.

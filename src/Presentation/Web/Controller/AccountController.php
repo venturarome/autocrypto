@@ -2,8 +2,7 @@
 
 namespace App\Presentation\Web\Controller;
 
-use App\Application\Service\Asset\GetAssetInfo;
-use App\Application\Service\Asset\GetAssetInfoRequest;
+use App\Domain\Repository\Account\PreferenceRepository;
 use App\Infrastructure\Persistence\Doctrine\Repository\Account\AccountRepository;
 use App\Infrastructure\Persistence\Doctrine\Repository\Account\BalanceRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,14 +20,21 @@ class AccountController extends AbstractController
     }
 
     #[Route('/account/{reference}', name: 'account', methods: ['GET'])]
-    public function account(AccountRepository $accountRepo, BalanceRepository $balanceRepo, string $reference): Response
+    public function account(
+        AccountRepository $accountRepo,
+        PreferenceRepository $preferenceRepo,
+        BalanceRepository $balanceRepo,
+        string $reference
+    ): Response
     {
-        $account = $accountRepo->findByReference($reference);
-        $balances = $account ? $balanceRepo->findOfAccount($account) : null;
+        $account = $accountRepo->findByReferenceOrFail($reference);
+        $preferences = $preferenceRepo->findOfAccount($account);
+        $balances = $balanceRepo->findOfAccount($account);
 
         return $this->render('@Web/Account/account.html.twig', [
             'reference' => $reference,
             'account' => $account,
+            'preferences' => $preferences,
             'balances' => $balances,
         ]);
     }

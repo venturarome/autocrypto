@@ -20,11 +20,11 @@ class PreferenceRepository extends ServiceEntityRepository implements Preference
 
     public function findOfAccount(Account $account): PreferenceCollection
     {
-        // TODO: Implement findOfAccount() method.
+        return new PreferenceCollection($this->findBy(['account' => $account]));
     }
 
     public function findOfAccountByName(Account $account, string $name): Preference
     {
-        // TODO: Implement findOfAccountByName() method.
+        return $this->findOneBy(['account' => $account, 'name' => $name]);
     }
 }
