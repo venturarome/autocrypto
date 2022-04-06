@@ -58,4 +58,22 @@ class CandleRepository extends ServiceEntityRepository /*RepositoryBase*/ implem
 
         return $qb->getQuery()->getSingleScalarResult();
     }
+
+    public function deleteForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to): void
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->delete(Candle::class, 'c')
+            ->where('c.pair = :pair')
+            ->andWhere('c.timespan = :timespan')
+            ->andWhere('c.timestamp >= :timestamp_from')
+            ->andWhere('c.timestamp <= :timestamp_to')
+            ->setParameters([
+                'pair' => $pair,
+                'timespan' => $timespan,
+                'timestamp_from' => $date_from->getTimestamp(),
+                'timestamp_to' => $date_to->getTimestamp(),
+            ]);
+
+        $qb->getQuery()->execute();
+    }
 }

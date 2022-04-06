@@ -51,6 +51,11 @@ class Pair
         $this->date_tracker = DateTracker::create();
     }
 
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
     public function getUuid(): string
     {
         return $this->uuid;

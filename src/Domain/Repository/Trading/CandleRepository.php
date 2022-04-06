@@ -14,4 +14,6 @@ interface CandleRepository
     public function findForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to, int $first_result, int $max_results): CandleCollection;
 
     public function countForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to): int;
+
+    public function deleteForPairInRange(Pair $pair, int $timespan, \DateTimeInterface $date_from, \DateTimeInterface $date_to): void;
 }
