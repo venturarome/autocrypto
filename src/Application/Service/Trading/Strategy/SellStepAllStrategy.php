@@ -3,6 +3,7 @@
 namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
+use App\Domain\Model\Account\Preference;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
 
@@ -10,22 +11,21 @@ class SellStepAllStrategy extends SellStrategy
 {
     public const NAME = 'sell.step.all';
 
-    // TODO parametrizar
-    private const RETURN_THRESHOLD = -0.2;
+    protected int $num_candles = 10;
+    protected float $return_threshold = -0.2;
 
-    // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
-    public function __construct() {
+
+    public function __construct(array $custom_params = []) {
+        $this->num_candles = $custom_params[Preference::NAME_SELL_NUM_CANDLES] ?? $this->num_candles;
+        $this->return_threshold = $custom_params[Preference::NAME_SELL_RETURN_THRESHOLD] ?? $this->return_threshold;
+
         parent::__construct(self::NAME);
     }
 
-    public static function dumpConstants(): string
+    public function dumpConstants(): string
     {
-        return "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL;
-    }
-
-    public function getNumberOfCandles(): int
-    {
-        return 5;
+        return "num_candles: " . $this->num_candles . PHP_EOL
+            . "return_threshold: " . $this->return_threshold . PHP_EOL;
     }
 
     public function run(Account $account, CandleCollection $candles): ?Order
@@ -37,7 +37,7 @@ class SellStepAllStrategy extends SellStrategy
         if ($candles->count() === 0) {
             return null;
         }
-        $candles = $this->curateData($candles);
+        $candles = $candles->filterLastCandles($this->num_candles);
 
         $base = $candles->getBase();
         if (!$account->hasBalanceOf($base)) {
@@ -45,17 +45,10 @@ class SellStepAllStrategy extends SellStrategy
         }
         $base_balance = $account->getBalanceOf($base);
 
-        if ($candles->getPerformance()->getPercentageReturn() > self::RETURN_THRESHOLD) {
+        if ($candles->getPerformance()->getPercentageReturn() > $this->return_threshold) {
             return null;
         }
 
         return Order::createMarketSell($account, $candles->getPair(), $base_balance->getAmount());
     }
-
-    public function curateData(CandleCollection $candles): CandleCollection
-    {
-        return $candles
-            ->filterLastCandles($this->getNumberOfCandles());
-    }
-
 }

@@ -15,14 +15,9 @@ class BuyNullStrategy extends BuyStrategy
         parent::__construct(self::NAME);
     }
 
-    public static function dumpConstants(): string
+    public function dumpConstants(): string
     {
         return "";
-    }
-
-    public function getNumberOfCandles(): int
-    {
-        return 0;
     }
 
     public function run(Account $account, CandleCollection $candles): ?Order

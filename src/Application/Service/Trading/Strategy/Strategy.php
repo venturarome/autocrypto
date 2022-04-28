@@ -20,7 +20,5 @@ abstract class Strategy
         $this->operation = $operation;
     }
 
-    abstract public function getNumberOfCandles(): int;
-
     abstract public function run(Account $account, CandleCollection $candles);
 }

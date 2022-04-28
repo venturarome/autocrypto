@@ -12,7 +12,5 @@ abstract class SellStrategy extends Strategy
         parent::__construct($name, Strategy::OPERATION_SELL);
     }
 
-    abstract public function getNumberOfCandles(): int;
-
     abstract public function run(Account $account, CandleCollection $candles): ?Order;
 }

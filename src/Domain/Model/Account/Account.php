@@ -268,4 +268,18 @@ class Account
         $value = $this->getPreferences()->find(Preference::NAME_SAFETY_AMOUNT);
         return $value ? (int)$value : null;
     }
+
+    public function getBuyStrategyParams(): array
+    {
+        return $this->getPreferences()->filter(
+            static fn(Preference $p) => $p->isBuyStrategyParam()
+        )->toArray();
+    }
+
+    public function getSellStrategyParams(): array
+    {
+        return $this->getPreferences()->filter(
+            static fn(Preference $p) => $p->isSellStrategyParam()
+        )->toArray();
+    }
 }

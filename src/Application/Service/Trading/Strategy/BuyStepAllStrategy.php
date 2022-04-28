@@ -3,6 +3,7 @@
 namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
+use App\Domain\Model\Account\Preference;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
 
@@ -10,23 +11,20 @@ class BuyStepAllStrategy extends BuyStrategy
 {
     public const NAME = 'buy.step.all';
 
+    protected int $num_candles = 10;
+    protected float $return_threshold = 3;
 
-    // TODO parametrizar
-    private const RETURN_THRESHOLD = 3;
+    public function __construct(array $custom_params = []) {
+        $this->num_candles = $custom_params[Preference::NAME_BUY_NUM_CANDLES] ?? $this->num_candles;
+        $this->return_threshold = $custom_params[Preference::NAME_BUY_RETURN_THRESHOLD] ?? $this->return_threshold;
 
-    // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
-    public function __construct() {
         parent::__construct(self::NAME);
     }
 
-    public static function dumpConstants(): string
+    public function dumpConstants(): string
     {
-        return "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL;
-    }
-
-    public function getNumberOfCandles(): int
-    {
-        return 10;
+        return "num_candles: " . $this->num_candles . PHP_EOL
+            . "return_threshold: " . $this->return_threshold . PHP_EOL;
     }
 
     public function run(Account $account, CandleCollection $candles): ?Order
@@ -38,10 +36,10 @@ class BuyStepAllStrategy extends BuyStrategy
         if($candles->count() === 0) {
             return null;
         }
-        $candles = $this->curateData($candles);
+        $candles = $candles->filterLastCandles($this->num_candles);
 
         $performance = $candles->getPerformance();
-        if ($performance->getPercentageReturn() <= self::RETURN_THRESHOLD) {
+        if ($performance->getPercentageReturn() <= $this->return_threshold) {
             return null;
         }
 
@@ -55,11 +53,4 @@ class BuyStepAllStrategy extends BuyStrategy
             $base_amount,
         );
     }
-
-    public function curateData(CandleCollection $candles): CandleCollection
-    {
-        return $candles
-            ->filterLastCandles($this->getNumberOfCandles());
-    }
-
 }

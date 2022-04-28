@@ -75,8 +75,8 @@ class AutoCryptoCommand extends Command
 
         /** @var BuyStrategy $buy_strategy */
         /** @var SellStrategy $sell_strategy */
-        $buy_strategy = $this->strategy_factory->createByName($account->getBuyStrategyName());
-        $sell_strategy = $this->strategy_factory->createByName($account->getSellStrategyName());
+        $buy_strategy = $this->strategy_factory->createCustomBuyForAccount($account);
+        $sell_strategy = $this->strategy_factory->createCustomSellForAccount($account);
 
         $quote = $this->spot_asset_repo->findBySymbolOrFail($account->getQuoteSymbol());
         $pairs = $this->pair_repo->findByQuote($quote);

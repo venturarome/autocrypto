@@ -3,6 +3,7 @@
 namespace App\Application\Service\Trading\Strategy;
 
 use App\Domain\Model\Account\Account;
+use App\Domain\Model\Account\Preference;
 use App\Domain\Model\Trading\CandleCollection;
 use App\Domain\Model\Trading\Order;
 
@@ -11,25 +12,25 @@ class BuyMomentumAllStrategy extends BuyStrategy
 {
     public const NAME = 'buy.momentum.all';
 
-    // TODO parametrizar
-    protected const MOMENTUM_RATIO = 10;
-    private const RETURN_THRESHOLD = 2;
+    protected int $num_candles = 10;
+    protected float $momentum_ratio = 10;
+    protected float $return_threshold = 2;
 
-    // TODO decidir si el nº de candles y el timespan entran por parametro en el constructor.
-    public function __construct() {
+    public function __construct(array $custom_params = []) {
+        $this->num_candles = $custom_params[Preference::NAME_BUY_NUM_CANDLES] ?? $this->num_candles;
+        $this->momentum_ratio = $custom_params[Preference::NAME_BUY_MOMENTUM_RATIO] ?? $this->momentum_ratio;
+        $this->return_threshold = $custom_params[Preference::NAME_BUY_RETURN_THRESHOLD] ?? $this->return_threshold;
+
         parent::__construct(self::NAME);
     }
 
-    public static function dumpConstants(): string
+    public function dumpConstants(): string
     {
-        return "MOMENTUM_RATIO: " . self::MOMENTUM_RATIO . PHP_EOL
-            . "RETURN_THRESHOLD: " . self::RETURN_THRESHOLD . PHP_EOL;
+        return "num_candles: " . $this->num_candles . PHP_EOL
+            . "momentum_ratio: " . $this->momentum_ratio . PHP_EOL
+            . "return_threshold: " . $this->return_threshold . PHP_EOL;
     }
 
-    public function getNumberOfCandles(): int
-    {
-        return 5;
-    }
 
     public function run(Account $account, CandleCollection $candles): ?Order
     {
@@ -42,14 +43,14 @@ class BuyMomentumAllStrategy extends BuyStrategy
 
         // TODO Idea: getWeightedAverageClose!!!
         $average_momentum = $candles->getAverageClose() - $candles->getAverageOpen();
-        $candles = $this->curateData($candles);
+        $candles = $candles->filterLastCandles($this->num_candles);
         $current_momentum = $candles->getAverageClose() - $candles->getAverageOpen();
 
         if ($current_momentum <= 0                                          // price going down
             ||                                                              // or
-            $current_momentum < self::MOMENTUM_RATIO * $average_momentum    // low momentum ratio
+            $current_momentum < $this->momentum_ratio * $average_momentum   // low momentum ratio
             ||                                                              // or
-            $candles->getPercentageReturn() < self::RETURN_THRESHOLD        // price not going up enough
+            $candles->getPercentageReturn() < $this->return_threshold       // price not going up enough
         ) {
             return null;
         }
@@ -64,11 +65,4 @@ class BuyMomentumAllStrategy extends BuyStrategy
             $base_amount,
         );
     }
-
-    public function curateData(CandleCollection $candles): CandleCollection
-    {
-        return $candles
-            ->filterLastCandles($this->getNumberOfCandles());
-    }
-
 }
