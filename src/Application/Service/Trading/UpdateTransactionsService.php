@@ -2,13 +2,11 @@
 
 namespace App\Application\Service\Trading;
 
-use App\Application\Exception\NotFoundException;
 use App\Domain\Event\Trading\TransactionAdded;
 use App\Domain\Model\Event\Event;
 use App\Domain\Model\Trading\SpotTransaction;
 use App\Domain\Model\Trading\StakingTransaction;
 use App\Domain\Repository\Account\AccountRepository;
-use App\Domain\Repository\Asset\PairRepository;
 use App\Domain\Repository\Asset\SpotAssetRepository;
 use App\Domain\Repository\Asset\StakingAssetRepository;
 use App\Domain\Repository\Trading\SpotTransactionRepository;
