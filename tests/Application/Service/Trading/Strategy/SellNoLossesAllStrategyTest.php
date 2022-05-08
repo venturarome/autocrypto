@@ -15,9 +15,19 @@ use Mockery\Adapter\Phpunit\MockeryTestCase;
 class SellNoLossesAllStrategyTest extends MockeryTestCase
 {
 
+    public function testOrderNotCreatedIfAccountHasNothingToSell(): void
+    {
+        $account = m::mock(Account::class)->allows(['canSell' => false]);
+        $candles = m::namedMock('candles', CandleCollection::class);
+
+        $order = (new SellNoLossesAllStrategy())->run($account, $candles);
+
+        $this->assertNull($order);
+    }
+
     public function testOrderNotCreatedIfAccountDoesNotHaveBalanceOfThatAsset(): void
     {
-        $account = m::mock(Account::class)->allows(['hasBalanceOf' => false]);
+        $account = m::mock(Account::class)->allows(['canSell' => true, 'hasBalanceOf' => false]);
         $candles = m::namedMock('candles', CandleCollection::class)->allows([
             'getBase' => m::mock(SpotAsset::class),
             'filterLastCandles' => m::fetchMock('candles')
@@ -42,6 +52,7 @@ class SellNoLossesAllStrategyTest extends MockeryTestCase
             'getAveragePrice' => 100,
         ]);
         $account = m::mock(Account::class)->allows([
+            'canSell' => true,
             'hasBalanceOf' => true,
             'getBalanceOf' => $balance,
         ]);
@@ -54,7 +65,9 @@ class SellNoLossesAllStrategyTest extends MockeryTestCase
     public function testOrderCreatedIfCandlesPercentageReturnIsBadAndCandlesLastPriceIsGood(): void
     {
         $base = m::mock(SpotAsset::class);
-        $pair = m::mock(Pair::class);
+        $pair = m::mock(Pair::class)->allows([
+            'getSymbol' => 'SOLEUR',
+        ]);
         $candles = m::mock(CandleCollection::class)->allows([
             'getBase' => $base,
             'filterLastCandles' => m::self(),
@@ -68,6 +81,7 @@ class SellNoLossesAllStrategyTest extends MockeryTestCase
             'getAmount' => 5,
         ]);
         $account = m::mock(Account::class)->allows([
+            'canSell' => true,
             'hasBalanceOf' => true,
             'getBalanceOf' => $balance,
         ]);
@@ -80,7 +94,9 @@ class SellNoLossesAllStrategyTest extends MockeryTestCase
     public function testOrderCreatedIfCandlesPercentageReturnIsGoodAndCandlesLastPriceIsBad(): void
     {
         $base = m::mock(SpotAsset::class);
-        $pair = m::mock(Pair::class);
+        $pair = m::mock(Pair::class)->allows([
+            'getSymbol' => 'SOLEUR',
+        ]);
         $candles = m::mock(CandleCollection::class)->allows([
             'getBase' => $base,
             'filterLastCandles' => m::self(),
@@ -94,6 +110,7 @@ class SellNoLossesAllStrategyTest extends MockeryTestCase
             'getAmount' => 5,
         ]);
         $account = m::mock(Account::class)->allows([
+            'canSell' => true,
             'hasBalanceOf' => true,
             'getBalanceOf' => $balance,
         ]);
@@ -106,7 +123,9 @@ class SellNoLossesAllStrategyTest extends MockeryTestCase
     public function testOrderCreatedIfCandlesPercentageReturnIsBadAndCandlesLastPriceIsBad(): void
     {
         $base = m::mock(SpotAsset::class);
-        $pair = m::mock(Pair::class);
+        $pair = m::mock(Pair::class)->allows([
+            'getSymbol' => 'SOLEUR',
+        ]);
         $candles = m::mock(CandleCollection::class)->allows([
             'getBase' => $base,
             'filterLastCandles' => m::self(),
@@ -120,6 +139,7 @@ class SellNoLossesAllStrategyTest extends MockeryTestCase
             'getAmount' => 5,
         ]);
         $account = m::mock(Account::class)->allows([
+            'canSell' => true,
             'hasBalanceOf' => true,
             'getBalanceOf' => $balance,
         ]);
